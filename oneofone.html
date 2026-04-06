@@ -567,21 +567,18 @@ function renderGlitch(ctx, images) {
     const traits = traitsByLayer[layer];
     if (!traits || traits.length === 0) return;
 
-    // Pick a trait based on frame + layer offset
-    const idx = (frameCount + li * 7) % traits.length;
+    // Slow trait cycling — changes every ~60 frames per layer
+    const idx = Math.floor(frameCount * 0.016 + li * 7) % traits.length;
     const img = images[traits[idx].key];
     if (!img) return;
 
-    // Offset based on noise
-    const ox = Math.sin(frameCount * 0.1 + li) * (8 + li * 3);
-    const oy = Math.cos(frameCount * 0.13 + li * 2) * (5 + li * 2);
-
-    ctx.globalAlpha = 0.7 + Math.sin(frameCount * 0.2 + li) * 0.3;
-    ctx.drawImage(img, ox, oy, 480, 480);
+    // No wobble — layers drawn at origin
+    ctx.globalAlpha = 0.7 + Math.sin(frameCount * 0.02 + li) * 0.3;
+    ctx.drawImage(img, 0, 0, 480, 480);
   });
 
-  // RGB split artifact
-  if (frameCount % 7 < 2) {
+  // RGB split artifact — slower, every ~20 frames
+  if (frameCount % 20 < 3) {
     ctx.globalCompositeOperation = 'screen';
     ctx.globalAlpha = 0.3;
     const shift = Math.random() * 20 - 10;
