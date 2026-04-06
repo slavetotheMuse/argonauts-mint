@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argonauts — 4,999 On-Chain Skeletal Voyagers</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.9.0/ethers.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --parchment: #f0e8d8;
+  --parchment-dark: #e4d9c4;
+  --parchment-deep: #d8cab0;
+  --ink: #1a1610;
+  --ink-light: #3d352a;
+  --ink-mid: #6b5d4d;
+  --ink-faint: #9c8d7a;
+  --gold: #dfb747;
+  --gold-dark: #be8c25;
+  --gold-light: #f0d06a;
+  --gold-pale: #f5e6b8;
+  --ancient: #d3854a;
+  --blush: #eb889b;
+  --aegean: #2d6581;
+  --muse: #2a725b;
+  --alien-cyan: #23a6cb;
+  --rad-green: #78ff4c;
+  --bone: #c8b89a;
+  --void: #0a0908;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: 'EB Garamond', 'Georgia', serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Parchment texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* ═══ GOLD ORNAMENTAL BORDERS (SVG inline) ═══ */
+.gold-rule {
+  display: block;
+  margin: 0 auto;
+  height: 20px;
+  opacity: 0.7;
+}
+.gold-rule-wide {
+  display: block;
+  margin: 0 auto;
+  height: 28px;
+  opacity: 0.6;
+}
+
+/* ═══ NAV ═══ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 14px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(240,232,216,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--gold-pale);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-brand img { height: 32px; opacity: 0.8; }
+.nav-brand span {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.nav-links a {
+  color: var(--ink-mid);
+  text-decoration: none;
+  font-family: 'EB Garamond', serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--gold-dark); }
+
+.wallet-btn {
+  background: var(--ink);
+  color: var(--parchment);
+  border: none;
+  padding: 9px 22px;
+  font-family: 'EB Garamond', serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.wallet-btn:hover { background: var(--ink-light); }
+.wallet-btn.connected {
+  background: transparent;
+  color: var(--aegean);
+  border: 1px solid var(--aegean);
+}
+
+/* ═══ HERO ═══ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 140px 24px 60px;
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(223,183,71,0.07) 0%, transparent 60%),
+    linear-gradient(180deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+}
+
+/* Gold corner ornaments on hero */
+.hero::before, .hero::after {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.3;
+}
+.hero::before { top: 90px; left: 40px; border-width: 2px 0 0 2px; }
+.hero::after { top: 90px; right: 40px; border-width: 2px 2px 0 0; }
+
+.hero-edition {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 24px;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: clamp(56px, 10vw, 120px);
+  color: var(--ink);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  line-height: 0.9;
+  margin-bottom: 16px;
+}
+
+.hero-italic {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(18px, 3vw, 28px);
+  color: var(--ink-mid);
+  letter-spacing: 3px;
+  margin-bottom: 40px;
+}
+
+.hero-rule {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto 36px;
+}
+
+.hero-desc {
+  max-width: 520px;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--ink-light);
+  margin-bottom: 48px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 48px;
+  margin-bottom: 40px;
+}
+
+.meta-item { text-align: center; }
+.meta-num {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--ink);
+}
+.meta-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* ═══ HERO FLANKING SPECIMENS ═══ */
+.hero-specimens {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 800px;
+  margin-top: 8px;
+}
+.hero-specimen {
+  width: 72px;
+  height: 72px;
+  image-rendering: pixelated;
+  border: 1px solid var(--gold-pale);
+  opacity: 0.85;
+  transition: all 0.4s;
+}
+.hero-specimen:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(223,183,71,0.25);
+}
+
+/* ═══ SPECIMEN GRID ═══ */
+.specimen-section {
+  padding: 40px 24px;
+  background: linear-gradient(180deg, var(--parchment-dark) 0%, var(--parchment) 50%, var(--parchment-dark) 100%);
+  position: relative;
+  border-top: 1px solid var(--gold-pale);
+  border-bottom: 1px solid var(--gold-pale);
+}
+
+.specimen-section::before, .specimen-section::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.35;
+}
+.specimen-section::before { top: 16px; }
+.specimen-section::after { bottom: 16px; }
+
+.specimen-label {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 24px;
+}
+
+.specimen-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.specimen {
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid var(--parchment-deep);
+  background: var(--parchment);
+}
+.specimen:hover {
+  transform: scale(1.15);
+  z-index: 2;
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(223,183,71,0.15);
+}
+
+.specimen img {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  -webkit-image-rendering: pixelated;
+  display: block;
+}
+
+.specimen-id {
+  position: absolute;
+  bottom: 4px;
+  left: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+}
+
+/* ═══ ABOUT / LORE ═══ */
+.about-section {
+  padding: 100px 24px;
+  max-width: 660px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+}
+
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--ink-faint);
+  margin-bottom: 20px;
+}
+
+.section-heading {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 48px);
+  color: var(--ink);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.section-heading-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.section-heading-ornament .orn-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.section-heading-ornament .orn-line:last-child {
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.section-heading-ornament .orn-diamond {
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.about-text {
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.9;
+  color: var(--ink-light);
+}
+.about-text em {
+  font-weight: 600;
+  font-style: italic;
+  color: var(--ink);
+}
+.about-text p { margin-bottom: 24px; }
+
+.attribution {
+  margin-top: 48px;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-faint);
+}
+
+/* ═══ ORNAMENTAL DIVIDER ═══ */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--parchment-deep), transparent);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  max-width: 400px;
+  margin: 0 auto;
+  opacity: 0.4;
+}
+.divider-dark {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+/* Gold frame ornament helper */
+.gold-frame {
+  position: relative;
+  border: 1px solid var(--gold-pale);
+}
+.gold-frame::before, .gold-frame::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.5;
+}
+.gold-frame::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+.gold-frame::after { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+/* ═══ PALETTE SECTION ═══ */
+.palette-section {
+  padding: 80px 24px;
+  background: var(--parchment-dark);
+  position: relative;
+}
+
+.palette-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.palette-heading {
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--ink-mid);
+  margin-bottom: 32px;
+}
+
+.palette-row {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 3px;
+  height: 64px;
+}
+
+.palette-swatch {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.palette-swatch:hover {
+  transform: scaleY(1.15);
+  z-index: 1;
+}
+
+.palette-swatch-label {
+  position: absolute;
+  bottom: 4px;
+  left: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.palette-swatch:hover .palette-swatch-label { opacity: 1; }
+
+.palette-caption {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 20px;
+}
+
+/* ═══ MINT ═══ */
+.mint-section {
+  padding: 100px 24px 120px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.mint-frame {
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+}
+
+.mint-card {
+  background: white;
+  border: 1px solid var(--gold-pale);
+  padding: 56px 44px;
+  margin-top: 40px;
+  position: relative;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.04);
+}
+
+/* Double gold corner ornaments */
+.mint-card::before, .mint-card::after {
+  content: '';
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.55;
+}
+.mint-card::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+.mint-card::after { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+.mint-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.mint-price-display {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 42px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.mint-gas {
+  font-size: 14px;
+  color: var(--ink-faint);
+  font-style: italic;
+  margin-bottom: 36px;
+}
+
+.qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  margin-bottom: 36px;
+}
+
+.qty-btn {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--parchment-deep);
+  color: var(--ink);
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qty-btn:hover {
+  border-color: var(--gold);
+  background: var(--parchment);
+}
+
+.qty-num {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 40px;
+  color: var(--ink);
+  min-width: 44px;
+  text-align: center;
+}
+
+.mint-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--ink);
+  border: none;
+  color: var(--parchment);
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.mint-btn:hover {
+  background: var(--ink-light);
+  letter-spacing: 8px;
+}
+.mint-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  letter-spacing: 6px;
+}
+
+.mint-progress-track {
+  margin-top: 28px;
+  height: 2px;
+  background: var(--parchment-deep);
+}
+.mint-progress-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.6s;
+}
+
+.mint-counter {
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+}
+
+.mint-status {
+  margin-top: 16px;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--aegean);
+  min-height: 22px;
+}
+
+/* ═══ RARITY ═══ */
+.rarity-section {
+  padding: 100px 24px 120px;
+  background: var(--void);
+  color: var(--parchment);
+  position: relative;
+}
+
+.rarity-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.rarity-heading {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 48px);
+  color: var(--parchment);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.rarity-sub {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 56px;
+}
+
+.rarity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(223,183,71,0.12);
+}
+
+.rarity-cell {
+  background: var(--void);
+  padding: 36px 28px;
+  transition: background 0.3s;
+}
+.rarity-cell:hover { background: rgba(255,255,255,0.03); }
+
+.rarity-tier {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.rarity-tier.alien { color: var(--alien-cyan); }
+.rarity-tier.rad { color: var(--rad-green); }
+.rarity-tier.standard { color: var(--gold); }
+
+.rarity-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+.rarity-desc {
+  font-family: 'EB Garamond', serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.55);
+}
+
+/* ═══ TRAIT CATALOG ═══ */
+.catalog-section {
+  padding: 80px 24px 100px;
+  position: relative;
+}
+
+.catalog-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.catalog-heading {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 32px;
+}
+
+.catalog-item { text-align: center; }
+
+.catalog-layer {
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.catalog-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.catalog-list {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-mid);
+  line-height: 1.6;
+}
+
+/* ═══ ACK DISCLAIMER ═══ */
+.disclaimer-section {
+  padding: 40px 24px 48px;
+  background: var(--parchment-dark);
+}
+.disclaimer-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
+}
+.disclaimer-text {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-faint);
+  opacity: 0.75;
+}
+.disclaimer-sig {
+  margin-top: 12px;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--gold-dark);
+  opacity: 0.5;
+  letter-spacing: 2px;
+}
+
+/* ═══ FOOTER ═══ */
+footer {
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--parchment-dark);
+  border-top: 1px solid var(--gold-pale);
+}
+footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
+
+.footer-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+.footer-links a {
+  font-family: 'EB Garamond', serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink-mid);
+  text-decoration: none;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+.footer-links a:hover { color: var(--gold-dark); }
+
+/* ═══ TOAST ═══ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: white;
+  border: 1px solid var(--gold-pale);
+  padding: 16px 24px;
+  z-index: 10001;
+  max-width: 340px;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.toast-msg {
+  font-size: 13px;
+  color: var(--ink-mid);
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 768px) {
+  nav { padding: 12px 16px; }
+  .nav-links a { display: none; }
+  .hero::before, .hero::after { display: none; }
+  .hero-meta { gap: 24px; }
+  .meta-num { font-size: 28px; }
+  .hero-specimens { gap: 8px; }
+  .hero-specimen { width: 56px; height: 56px; }
+  .mint-card { padding: 40px 28px; }
+  .rarity-grid { grid-template-columns: 1fr; }
+  .specimen { width: 80px; height: 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="nav-brand">
+    <img src="ack_logo.png" alt="ACK">
+    <span>Argonauts</span>
+  </div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#mint">Mint</a>
+    <a href="#rarity">Rarity</a>
+    <a href="generator.html">Generator</a>
+    <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">Connect</button>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-edition">Collection of 4,999 &mdash; Fully On-Chain</div>
+  <h1 class="hero-title">Argonauts</h1>
+  <p class="hero-italic">A Fully On-Chain Collection by a.c.k.</p>
+  <div class="hero-rule"></div>
+  <p class="hero-desc">
+    56 hand-made traits, rendered and compressed down to fine art pixel with code.
+    4,999 unique compositions stored entirely on the Ethereum blockchain. No servers. No IPFS.
+  </p>
+  <div class="hero-meta">
+    <div class="meta-item">
+      <div class="meta-num">4,999</div>
+      <div class="meta-label">Supply</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-num">56</div>
+      <div class="meta-label">Traits</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-num">17</div>
+      <div class="meta-label">Aliens</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-num">24&times;24</div>
+      <div class="meta-label">Pixels</div>
+    </div>
+  </div>
+  <!-- Flanking specimen thumbnails -->
+  <div class="hero-specimens" id="heroSpecimens"></div>
+</section>
+
+<!-- ═══ GOLD ORNAMENT DIVIDER ═══ -->
+<div style="padding: 8px 0; background: var(--parchment-dark);">
+  <svg class="gold-rule-wide" viewBox="0 0 600 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="400">
+    <line x1="0" y1="10" x2="260" y2="10" stroke="#dfb747" stroke-width="0.5" opacity="0.4"/>
+    <line x1="340" y1="10" x2="600" y2="10" stroke="#dfb747" stroke-width="0.5" opacity="0.4"/>
+    <polygon points="295,3 300,10 305,3" fill="none" stroke="#dfb747" stroke-width="0.6" opacity="0.5"/>
+    <polygon points="295,17 300,10 305,17" fill="none" stroke="#dfb747" stroke-width="0.6" opacity="0.5"/>
+    <circle cx="280" cy="10" r="1.5" fill="#dfb747" opacity="0.4"/>
+    <circle cx="320" cy="10" r="1.5" fill="#dfb747" opacity="0.4"/>
+  </svg>
+</div>
+
+<!-- ═══ SPECIMEN STRIP ═══ -->
+<section class="specimen-section" id="specimens">
+  <div class="specimen-label">On-Chain Specimens</div>
+  <div class="specimen-grid" id="specimenGrid"></div>
+</section>
+
+<!-- Gold ornament -->
+<div style="padding: 8px 0;">
+  <svg class="gold-rule-wide" viewBox="0 0 600 20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" width="400">
+    <line x1="0" y1="10" x2="260" y2="10" stroke="#dfb747" stroke-width="0.5" opacity="0.4"/>
+    <line x1="340" y1="10" x2="600" y2="10" stroke="#dfb747" stroke-width="0.5" opacity="0.4"/>
+    <rect x="293" y="4" width="14" height="12" fill="none" stroke="#dfb747" stroke-width="0.5" opacity="0.4" transform="rotate(45 300 10)"/>
+  </svg>
+</div>
+
+<!-- ═══ ABOUT ═══ -->
+<section class="about-section" id="about">
+  <div class="section-num">I.</div>
+  <h2 class="section-heading">The Voyage</h2>
+  <div class="section-heading-ornament">
+    <div class="orn-line"></div>
+    <div class="orn-diamond"></div>
+    <div class="orn-line"></div>
+  </div>
+  <div class="about-text">
+    <p>56 hand-drawn traits &mdash; backgrounds, bodies, crowns, cloaks, relics &mdash;
+    stored as contract bytecode and composed into <em>unique works</em> at the moment of query.
+    Nothing hosted. Nothing that can disappear.</p>
+    <p>Each piece is a 24&times;24 pixel composition rendered as SVG, living entirely
+    on Ethereum. The art exists as long as the chain does. <em>Permanent by design.</em></p>
+  </div>
+  <div class="attribution">&mdash; by ack.eth</div>
+</section>
+
+<div class="divider-gold"></div>
+
+<!-- ═══ PALETTE ═══ -->
+<section class="palette-section">
+  <div class="palette-inner">
+    <div class="palette-heading">Thirty Realms, Sampled from the Art</div>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background:#ab3662"><span class="palette-swatch-label">Candy</span></div>
+      <div class="palette-swatch" style="background:#dfb747"><span class="palette-swatch-label">Sunstone</span></div>
+      <div class="palette-swatch" style="background:#141414"><span class="palette-swatch-label">Slate</span></div>
+      <div class="palette-swatch" style="background:#2d6581"><span class="palette-swatch-label">Aegean Blue</span></div>
+      <div class="palette-swatch" style="background:#2a725b"><span class="palette-swatch-label">Muse Green</span></div>
+      <div class="palette-swatch" style="background:#d3854a"><span class="palette-swatch-label">Ancient</span></div>
+      <div class="palette-swatch" style="background:#eb889b"><span class="palette-swatch-label">Blush</span></div>
+      <div class="palette-swatch" style="background:#c1caca"><span class="palette-swatch-label">Off-White</span></div>
+    </div>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background:#c8d9d7"><span class="palette-swatch-label">Ice Prism</span></div>
+      <div class="palette-swatch" style="background:#bac499"><span class="palette-swatch-label">Wide Violet</span></div>
+      <div class="palette-swatch" style="background:#a89db9"><span class="palette-swatch-label">Aether</span></div>
+      <div class="palette-swatch" style="background:#97cfad"><span class="palette-swatch-label">Wide Rose</span></div>
+      <div class="palette-swatch" style="background:#c1b38a"><span class="palette-swatch-label">Eclipse</span></div>
+      <div class="palette-swatch" style="background:#bfcbe2"><span class="palette-swatch-label">Candy Prism</span></div>
+      <div class="palette-swatch" style="background:#adbcd4"><span class="palette-swatch-label">Warp Cool</span></div>
+      <div class="palette-swatch" style="background:#ba99aa"><span class="palette-swatch-label">Warp Pastel</span></div>
+    </div>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background:#304a54"><span class="palette-swatch-label">Mutagen</span></div>
+      <div class="palette-swatch" style="background:#322e74"><span class="palette-swatch-label">Synthesis</span></div>
+      <div class="palette-swatch" style="background:#3f1c57"><span class="palette-swatch-label">Decay</span></div>
+      <div class="palette-swatch" style="background:#621874"><span class="palette-swatch-label">Isotope</span></div>
+      <div class="palette-swatch" style="background:#662860"><span class="palette-swatch-label">Nuclear Glow</span></div>
+      <div class="palette-swatch" style="background:#2b5f39"><span class="palette-swatch-label">Fallout Wash</span></div>
+      <div class="palette-swatch" style="background:#98d52e"><span class="palette-swatch-label">Toxic Prism</span></div>
+      <div class="palette-swatch" style="background:#be8c25"><span class="palette-swatch-label">Nuclear Dawn</span></div>
+    </div>
+    <div class="palette-caption">Color Palette &mdash; 30 Realms Sampled from On-Chain Art</div>
+  </div>
+</section>
+
+<!-- ═══ MINT ═══ -->
+<section class="mint-section" id="mint">
+  <div class="mint-frame">
+    <div class="section-num">II.</div>
+    <h2 class="section-heading">Claim</h2>
+    <div class="section-heading-ornament">
+      <div class="orn-line"></div>
+      <div class="orn-diamond"></div>
+      <div class="orn-line"></div>
+    </div>
+    <div class="mint-card gold-frame">
+      <div class="mint-label">Price per Voyager</div>
+      <div class="mint-price-display">Free</div>
+      <div class="mint-gas">gas only</div>
+
+      <div class="qty-row">
+        <button class="qty-btn" onclick="adjustQty(-1)">&minus;</button>
+        <div class="qty-num" id="qtyDisplay">1</div>
+        <button class="qty-btn" onclick="adjustQty(1)">+</button>
+      </div>
+
+      <button class="mint-btn" id="mintBtn" onclick="mint()" disabled>
+        Connect Wallet
+      </button>
+
+      <div class="mint-progress-track">
+        <div class="mint-progress-fill" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="mint-counter" id="mintCount">&mdash; / 4,999</div>
+
+      <div class="mint-status" id="mintStatus"></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider-gold"></div>
+
+<!-- ═══ RARITY ═══ -->
+<section class="rarity-section" id="rarity">
+  <div class="rarity-inner">
+    <h2 class="rarity-heading">Rarity</h2>
+    <div class="rarity-sub">Three Tiers of Existence</div>
+    <div class="divider divider-dark" style="margin-bottom:48px"></div>
+    <div class="rarity-grid">
+      <div class="rarity-cell">
+        <div class="rarity-tier alien">Alien</div>
+        <div class="rarity-count">17 of 4,999 &mdash; 0.34%</div>
+        <div class="rarity-desc">
+          Cyan-skinned beings from beyond the stars. Pre-assigned with curated
+          trait combinations and an ethereal glow. The rarest Forms.
+        </div>
+      </div>
+      <div class="rarity-cell">
+        <div class="rarity-tier rad">Radioactive</div>
+        <div class="rarity-count">25 of 4,999 &mdash; 0.50%</div>
+        <div class="rarity-desc">
+          Irradiated voyagers pulsing with toxic energy. Exclusive backgrounds
+          like Nuclear Glow and Toxic Pink. A luminous aura of contamination.
+        </div>
+      </div>
+      <div class="rarity-cell">
+        <div class="rarity-tier standard">Standard</div>
+        <div class="rarity-count">4,957 of 4,999</div>
+        <div class="rarity-desc">
+          The core crew. Nine skull Forms from Bone to Gold to Floral.
+          Adorned with Crowns, Relics, Cloaks, and Artifacts of the voyage.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CATALOG ═══ -->
+<section class="catalog-section" id="catalog">
+  <div class="catalog-inner">
+    <div class="section-num">III.</div>
+    <h2 class="catalog-heading">Trait Catalog</h2>
+    <div class="section-heading-ornament" style="margin-bottom:40px">
+      <div class="orn-line"></div>
+      <div class="orn-diamond"></div>
+      <div class="orn-line"></div>
+    </div>
+    <div class="catalog-grid">
+      <div class="catalog-item">
+        <div class="catalog-layer">Realm</div>
+        <div class="catalog-count">30 backgrounds</div>
+        <div class="catalog-list">Candy, Sunstone, Slate, Aegean Blue, Blush, Ancient, Ice Prism, and 23 more</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">Form</div>
+        <div class="catalog-count">9 bodies + 2 special</div>
+        <div class="catalog-list">Bone, Silver, Gold, Coral, Petrified, Prehistoric, Floral, Alien, Radioactive</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">Crown</div>
+        <div class="catalog-count">4 headpieces</div>
+        <div class="catalog-list">Bandana, Beanie, Golden Fleece, Mohawk</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">Sight</div>
+        <div class="catalog-count">7 eye types</div>
+        <div class="catalog-list">Glasses, 3D Glasses, Digital Frames, Purple Frames, Sunglasses, Eye Patch, Cyclops</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">Cloak</div>
+        <div class="catalog-count">2 hoodies</div>
+        <div class="catalog-list">Servant Cloak, Shadow Cloak</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">Artifact</div>
+        <div class="catalog-count">2 mouth items</div>
+        <div class="catalog-list">Pipe, Vape</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">Relic</div>
+        <div class="catalog-count">1 neck item</div>
+        <div class="catalog-list">Gold Chain</div>
+      </div>
+      <div class="catalog-item">
+        <div class="catalog-layer">On-Chain</div>
+        <div class="catalog-count">56 total assets</div>
+        <div class="catalog-list">Stored as contract bytecode via SSTORE2. Rendered as SVG at query time.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ACK DISCLAIMER ═══ -->
+<section class="disclaimer-section">
+  <div class="divider-gold" style="margin-bottom: 32px;"></div>
+  <div class="disclaimer-inner">
+    <div class="disclaimer-text">
+      This is the first fully on-chain series by a.c.k., and offered as a free claim to his
+      existing collectors, because why not. It's free&hellip; zero expectations. If you buy any
+      extras, assume they never become more valuable. This is strictly for the art and fun of it.
+      I will not be hustling to pump floor price. I won't pay any attention to floor price at all.
+    </div>
+    <div class="disclaimer-sig">&mdash; a.c.k.</div>
+  </div>
+  <div class="divider-gold" style="margin-top: 32px;"></div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <img src="ack_logo.png" alt="ACK">
+  <div class="footer-text">100% On-Chain &mdash; No IPFS &mdash; No Servers &mdash; Just Ethereum</div>
+  <div class="footer-links">
+    <a href="https://etherscan.io" target="_blank">Etherscan</a>
+    <a href="https://opensea.io" target="_blank">OpenSea</a>
+    <a href="https://twitter.com" target="_blank">Twitter</a>
+  </div>
+</footer>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle"></div>
+  <div class="toast-msg" id="toastMsg"></div>
+</div>
+
+<script src="specimen_data.js"></script>
+<script>
+// ═══ CONFIG ═══
+const CONFIG = {
+  contractAddress: '0xFD471836031dc5108809D173A067e8486B9047A3',
+  chainId: 31337,
+  rpcUrl: 'http://127.0.0.1:8545',
+  maxSupply: 4999,
+  maxPerTx: 30,
+};
+
+const ABI = [
+  'function ownerMint(address to, uint256 quantity) external',
+  'function mintAckPfp(uint256 quantity) external',
+  'function mintAckCollector(uint256 quantity) external',
+  'function totalMinted() external view returns (uint256)',
+  'function mintActive() external view returns (bool)',
+  'function tokenURI(uint256 tokenId) external view returns (string)',
+  'function balanceOf(address owner) external view returns (uint256)',
+];
+
+let provider, signer, contract, walletAddress;
+let mintQty = 1;
+
+// ═══ WALLET ═══
+async function connectWallet() {
+  if (!window.ethereum) { showToast('No Wallet', 'Install MetaMask to continue.'); return; }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send('eth_requestAccounts', []);
+    signer = await provider.getSigner();
+    walletAddress = accounts[0];
+    contract = new ethers.Contract(CONFIG.contractAddress, ABI, signer);
+    const btn = document.getElementById('connectBtn');
+    btn.textContent = walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
+    btn.classList.add('connected');
+    document.getElementById('mintBtn').disabled = false;
+    document.getElementById('mintBtn').textContent = 'Mint';
+    showToast('Connected', walletAddress.slice(0,10) + '...');
+    updateMintCount();
+  } catch (e) {
+    showToast('Error', e.message || 'Connection failed');
+  }
+}
+
+// ═══ MINT ═══
+function adjustQty(d) {
+  mintQty = Math.max(1, Math.min(CONFIG.maxPerTx, mintQty + d));
+  document.getElementById('qtyDisplay').textContent = mintQty;
+}
+
+async function mint() {
+  if (!contract) return;
+  const btn = document.getElementById('mintBtn');
+  const status = document.getElementById('mintStatus');
+  try {
+    btn.disabled = true; btn.textContent = 'Confirming...';
+    status.textContent = 'Awaiting wallet signature...';
+    status.style.color = 'var(--ink-mid)';
+    let tx;
+    try { tx = await contract.ownerMint(walletAddress, mintQty); }
+    catch(e) { tx = await contract.mintAckCollector(mintQty); }
+    btn.textContent = 'Minting...';
+    status.textContent = 'Transaction submitted...';
+    await tx.wait();
+    status.style.color = 'var(--aegean)';
+    status.textContent = `Minted ${mintQty} Argonaut${mintQty>1?'s':''}`;
+    showToast('Success', `${mintQty} voyager${mintQty>1?'s':''} claimed.`);
+    updateMintCount();
+    loadSpecimens();
+  } catch (e) {
+    status.style.color = '#c04040';
+    status.textContent = e.reason || e.message || 'Mint failed';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Mint';
+  }
+}
+
+async function updateMintCount() {
+  try {
+    const rp = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+    const rc = new ethers.Contract(CONFIG.contractAddress, ABI, rp);
+    const total = Number(await rc.totalMinted());
+    const pct = (total / CONFIG.maxSupply * 100).toFixed(1);
+    document.getElementById('mintCount').textContent = `${total.toLocaleString()} / ${CONFIG.maxSupply.toLocaleString()}`;
+    document.getElementById('progressBar').style.width = pct + '%';
+  } catch(e) {}
+}
+
+// ═══ SPECIMEN GRID ═══
+// Uses pre-baked specimen data from specimen_data.js (always available),
+// upgrades to live contract data if Anvil/RPC is running.
+
+function renderSpecimens(specimens) {
+  const grid = document.getElementById('specimenGrid');
+  const heroGrid = document.getElementById('heroSpecimens');
+  const cards = [];
+  const heroCards = [];
+  for (const s of specimens) {
+    const src = 'data:image/svg+xml;base64,' + s.svg;
+    cards.push(`<div class="specimen"><img src="${src}" alt="Argonaut #${s.id}"></div>`);
+    if (heroCards.length < 8) {
+      heroCards.push(`<img class="hero-specimen" src="${src}" alt="Argonaut #${s.id}">`);
+    }
+  }
+  grid.innerHTML = cards.join('');
+  heroGrid.innerHTML = heroCards.join('');
+}
+
+async function loadSpecimens() {
+  // Immediately show pre-baked specimens (always works, no RPC needed)
+  if (typeof SPECIMEN_DATA !== 'undefined' && SPECIMEN_DATA.length) {
+    renderSpecimens(SPECIMEN_DATA);
+  }
+
+  // Try to upgrade with live contract data if RPC is available
+  try {
+    const rp = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+    const rc = new ethers.Contract(CONFIG.contractAddress, ABI, rp);
+    const total = Number(await rc.totalMinted());
+    if (!total) return;
+
+    const indices = [];
+    const count = Math.min(total, 30);
+    if (total <= 30) {
+      for (let i = 1; i <= total; i++) indices.push(i);
+    } else {
+      const step = total / count;
+      for (let i = 0; i < count; i++) {
+        indices.push(Math.max(1, Math.min(total, Math.round(1 + i * step))));
+      }
+    }
+
+    const live = [];
+    for (const idx of indices) {
+      try {
+        const uri = await rc.tokenURI(idx);
+        const json = JSON.parse(atob(uri.split('base64,')[1]));
+        const svgB64 = json.image.split('base64,')[1];
+        live.push({ id: idx, svg: svgB64 });
+      } catch(e) {}
+    }
+    if (live.length) renderSpecimens(live);
+  } catch(e) {
+    // RPC not available — pre-baked data already showing
+  }
+}
+
+// ═══ TOAST ═══
+function showToast(t, m) {
+  document.getElementById('toastTitle').textContent = t;
+  document.getElementById('toastMsg').textContent = m;
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ═══ SMOOTH SCROLL ═══
+document.querySelectorAll('nav a').forEach(a => {
+  const href = a.getAttribute('href');
+  if (href && href.startsWith('#')) {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(href)?.scrollIntoView({behavior:'smooth'});
+    });
+  }
+});
+
+// ═══ INIT ═══
+updateMintCount();
+loadSpecimens();
+</script>
+</body>
+</html>

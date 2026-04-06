@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argonauts — Generator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@300;400;600&display=swap');
+
+:root {
+  --parchment: #f0e8d8;
+  --parchment-dark: #e4d9c4;
+  --parchment-deep: #d8cab0;
+  --ink: #1a1610;
+  --ink-light: #3d352a;
+  --ink-mid: #6b5d4d;
+  --ink-faint: #9c8d7a;
+  --gold: #dfb747;
+  --gold-dark: #be8c25;
+  --gold-light: #f0d06a;
+  --gold-pale: #f5e6b8;
+  --aegean: #2d6581;
+  --alien-cyan: #23a6cb;
+  --rad-green: #78ff4c;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: 'EB Garamond', Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Parchment texture */
+body::after {
+  content:'';
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:10000;
+}
+
+/* ═══ NAV ═══ */
+nav {
+  padding: 14px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(240,232,216,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--gold-pale);
+}
+.nav-brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.nav-brand img { height:32px; opacity:0.8; }
+.nav-brand span {
+  font-family:'Playfair Display', serif;
+  font-weight:400;
+  font-size:16px;
+  letter-spacing:6px;
+  text-transform:uppercase;
+  color:var(--ink-light);
+}
+.nav-links {
+  display:flex;
+  gap:28px;
+  align-items:center;
+}
+.nav-links a {
+  color:var(--ink-mid);
+  text-decoration:none;
+  font-family:'EB Garamond', serif;
+  font-weight:500;
+  font-size:15px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  transition:color 0.3s;
+}
+.nav-links a:hover { color:var(--gold-dark); }
+
+/* ═══ HEADER ═══ */
+.gen-header {
+  text-align:center;
+  padding:40px 24px 24px;
+}
+.gen-header h1 {
+  font-family:'Playfair Display', serif;
+  font-weight:800;
+  font-size:clamp(32px, 5vw, 52px);
+  color:var(--ink);
+  letter-spacing:3px;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.gen-header .gen-sub {
+  font-family:'Playfair Display', serif;
+  font-style:italic;
+  font-weight:400;
+  font-size:16px;
+  color:var(--ink-faint);
+  letter-spacing:2px;
+}
+.gen-stats {
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  margin-top:20px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.82em;
+}
+.gen-stat-label {
+  font-size:0.8em;
+  color:var(--ink-faint);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:2px;
+}
+.gen-stat-value {
+  color:var(--gold-dark);
+  font-weight:600;
+  font-size:1.15em;
+}
+
+/* ═══ MAIN LAYOUT ═══ */
+.gen-container {
+  max-width:1260px;
+  margin:0 auto;
+  padding:24px 20px 60px;
+}
+.gen-main {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:36px;
+  align-items:start;
+}
+
+/* ═══ PREVIEW ═══ */
+.preview-col {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.preview-frame {
+  position:relative;
+  padding:4px;
+  background: linear-gradient(135deg, rgba(223,183,71,0.35) 0%, rgba(200,180,140,0.1) 25%, rgba(223,183,71,0.2) 50%, rgba(200,180,140,0.1) 75%, rgba(223,183,71,0.35) 100%);
+  margin-bottom:16px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.06), 0 0 60px rgba(223,183,71,0.05);
+}
+.preview-frame::before, .preview-frame::after {
+  content:'';
+  position:absolute;
+  width:16px; height:16px;
+  border-color:var(--gold);
+  border-style:solid;
+  opacity:0.5;
+}
+.preview-frame::before { top:-2px; left:-2px; border-width:2px 0 0 2px; }
+.preview-frame::after { bottom:-2px; right:-2px; border-width:0 2px 2px 0; }
+
+.preview-inner {
+  background: var(--parchment-dark);
+  padding:6px;
+}
+
+/* Preview image — displays real SVG matching on-chain format */
+#previewImg {
+  display:block;
+  image-rendering:pixelated;
+  -webkit-image-rendering:pixelated;
+  width:480px;
+  height:480px;
+}
+
+/* Trait readout */
+.traits-readout {
+  width:100%;
+  max-width:460px;
+  border:1px solid var(--gold-pale);
+  background:rgba(255,255,255,0.5);
+  padding:14px 18px;
+  margin-bottom:16px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.8em;
+}
+.trait-row {
+  display:flex;
+  gap:12px;
+  margin-bottom:5px;
+  padding-bottom:5px;
+  border-bottom:1px solid var(--parchment-deep);
+}
+.trait-row:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+.trait-label-r {
+  color:var(--ink-faint);
+  min-width:80px;
+  font-weight:600;
+  font-size:0.9em;
+}
+.trait-value-r {
+  color:var(--ink-mid);
+}
+
+/* Action buttons */
+.btn-group {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.gen-btn {
+  padding:12px 24px;
+  background:transparent;
+  color:var(--ink-light);
+  border:1px solid var(--parchment-deep);
+  font-family:'Playfair Display', serif;
+  font-size:0.95em;
+  font-weight:600;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.gen-btn:hover {
+  border-color:var(--gold);
+  color:var(--gold-dark);
+  background:rgba(223,183,71,0.06);
+  box-shadow:0 0 20px rgba(223,183,71,0.06);
+}
+.gen-btn:active { transform:scale(0.97); }
+.gen-btn.active {
+  border-color:var(--gold);
+  color:var(--gold-dark);
+  background:rgba(223,183,71,0.1);
+  box-shadow:0 0 16px rgba(223,183,71,0.08);
+}
+
+/* ═══ CONTROLS (trait selectors) ═══ */
+.controls-col {
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.trait-selector {
+  border:1px solid var(--parchment-deep);
+  background:rgba(255,255,255,0.35);
+  padding:12px 14px;
+}
+
+.trait-cat-title {
+  color:var(--ink-mid);
+  font-family:'Playfair Display', serif;
+  font-weight:600;
+  font-style:italic;
+  margin-bottom:8px;
+  font-size:1em;
+  letter-spacing:1px;
+}
+
+.trait-thumbs {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(68px, 1fr));
+  gap:6px;
+}
+
+.trait-thumb {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  transition:all 0.2s;
+  padding:3px;
+}
+
+.thumb-img {
+  width:58px; height:58px;
+  background:var(--parchment-dark);
+  border:2px solid var(--parchment-deep);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:3px;
+  transition:all 0.2s;
+  image-rendering:pixelated;
+  overflow:hidden;
+}
+.thumb-img img {
+  max-width:100%; max-height:100%;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+}
+.thumb-label {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.6em;
+  text-align:center;
+  color:var(--ink-faint);
+  word-break:break-word;
+  width:100%;
+}
+
+.trait-thumb:hover .thumb-img {
+  border-color:var(--gold);
+  box-shadow:0 0 8px rgba(223,183,71,0.1);
+}
+
+.trait-thumb.selected .thumb-img {
+  border:2px solid var(--gold);
+  background:var(--gold-pale);
+  box-shadow:0 0 12px rgba(223,183,71,0.12);
+}
+.trait-thumb.selected .thumb-label {
+  color:var(--gold-dark);
+}
+
+/* ═══ CREW MODE (Gallery) ═══ */
+#crewMode {
+  display:none;
+  padding-top:20px;
+}
+
+.crew-header {
+  text-align:center;
+  margin-bottom:28px;
+}
+.crew-header h2 {
+  font-family:'Playfair Display', serif;
+  font-weight:700;
+  font-size:1.8em;
+  color:var(--ink);
+  letter-spacing:3px;
+  margin-bottom:4px;
+}
+.crew-header .crew-sub {
+  font-style:italic;
+  color:var(--ink-faint);
+  font-size:0.9em;
+  margin-bottom:16px;
+}
+.crew-controls {
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:24px;
+  flex-wrap:wrap;
+}
+
+.crew-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+  gap:14px;
+}
+
+.crew-item {
+  border:1px solid var(--parchment-deep);
+  padding:6px;
+  background:rgba(255,255,255,0.35);
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.crew-item:hover {
+  border-color:var(--gold);
+  box-shadow:0 0 20px rgba(223,183,71,0.08);
+}
+.crew-item img {
+  width:100%; height:auto;
+  display:block;
+  margin-bottom:6px;
+  image-rendering:pixelated;
+  -webkit-image-rendering:pixelated;
+}
+.crew-item-label {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.68em;
+  color:var(--ink-faint);
+}
+
+/* ═══ BATCH RENDER MODE ═══ */
+#batchMode {
+  display:none;
+  padding-top:20px;
+}
+.batch-header {
+  text-align:center;
+  margin-bottom:28px;
+}
+.batch-header h2 {
+  font-family:'Playfair Display', serif;
+  font-weight:700;
+  font-size:1.8em;
+  color:var(--ink);
+  letter-spacing:3px;
+  margin-bottom:4px;
+}
+.batch-header .batch-sub {
+  font-style:italic;
+  color:var(--ink-faint);
+  font-size:0.9em;
+  margin-bottom:16px;
+}
+.batch-controls {
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:24px;
+  flex-wrap:wrap;
+}
+.batch-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:14px;
+}
+.batch-item {
+  border:1px solid var(--parchment-deep);
+  padding:6px;
+  background:rgba(255,255,255,0.35);
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.batch-item:hover {
+  border-color:var(--gold);
+  box-shadow:0 0 20px rgba(223,183,71,0.08);
+}
+.batch-item img {
+  width:100%; height:auto;
+  display:block;
+  margin-bottom:6px;
+  image-rendering:pixelated;
+  -webkit-image-rendering:pixelated;
+}
+.batch-item-meta {
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.65em;
+  color:var(--ink-faint);
+  line-height:1.5;
+}
+.batch-download-all {
+  margin-top:20px;
+  text-align:center;
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width:1024px) {
+  .gen-main { grid-template-columns:1fr; }
+  #previewImg { width:320px; height:320px; }
+}
+@media (max-width:768px) {
+  nav { padding:12px 16px; }
+  .nav-links a:not(:last-child) { display:none; }
+  .gen-stats { flex-direction:column; gap:8px; }
+  .btn-group { flex-direction:column; }
+  .gen-btn { width:100%; }
+  .trait-thumbs { grid-template-columns:repeat(auto-fill, minmax(56px, 1fr)); }
+  #previewImg { width:260px; height:260px; }
+  .crew-grid { grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <img src="ack_logo.png" alt="ACK">
+    <span>Argonauts</span>
+  </div>
+  <div class="nav-links">
+    <a href="index.html">Mint</a>
+    <a href="#" style="color:var(--gold-dark);">Generator</a>
+  </div>
+</nav>
+
+<div class="gen-header">
+  <h1>Generator</h1>
+  <div class="gen-sub">Compose &amp; Preview Argonaut Trait Combinations</div>
+  <div class="gen-stats">
+    <div><div class="gen-stat-label">Combinations</div><div class="gen-stat-value" id="totalCombos">22,680</div></div>
+    <div><div class="gen-stat-label">Trait Layers</div><div class="gen-stat-value">7</div></div>
+    <div><div class="gen-stat-label">Rendered</div><div class="gen-stat-value" id="renderedCount">0</div></div>
+  </div>
+</div>
+
+<div class="gen-container">
+  <!-- ═══ GENERATOR MODE ═══ -->
+  <div class="gen-main" id="generatorMode">
+    <div class="preview-col">
+      <div class="preview-frame">
+        <div class="preview-inner">
+          <img id="previewImg" width="480" height="480">
+        </div>
+      </div>
+
+      <div class="traits-readout" id="traitsReadout">
+        <div class="trait-row"><div class="trait-label-r">Palette:</div><div class="trait-value-r" id="traitBackground">&mdash;</div></div>
+        <div class="trait-row"><div class="trait-label-r">Bones:</div><div class="trait-value-r" id="traitBody">&mdash;</div></div>
+        <div class="trait-row"><div class="trait-label-r">Cloak:</div><div class="trait-value-r" id="traitHoodie">&mdash;</div></div>
+        <div class="trait-row"><div class="trait-label-r">Relic:</div><div class="trait-value-r" id="traitNeck">&mdash;</div></div>
+        <div class="trait-row"><div class="trait-label-r">Sight:</div><div class="trait-value-r" id="traitEyes">&mdash;</div></div>
+        <div class="trait-row"><div class="trait-label-r">Artifact:</div><div class="trait-value-r" id="traitMouth">&mdash;</div></div>
+        <div class="trait-row"><div class="trait-label-r">Crown:</div><div class="trait-value-r" id="traitHead">&mdash;</div></div>
+      </div>
+
+      <div class="btn-group">
+        <button class="gen-btn" onclick="randomizeTraits()">Render</button>
+        <button class="gen-btn" onclick="downloadPFP()">Save</button>
+        <button class="gen-btn" onclick="showBatchMode()">Batch Render</button>
+        <button class="gen-btn" onclick="showCrewMode()">Crew</button>
+        <button class="gen-btn" id="rapidBtn" onclick="toggleRapid()">Rapid</button>
+      </div>
+    </div>
+
+    <div class="controls-col">
+      <div class="trait-selector">
+        <div class="trait-cat-title">Palette</div>
+        <div class="trait-thumbs" id="traitBackgroundSelector"></div>
+      </div>
+      <div class="trait-selector">
+        <div class="trait-cat-title">Bones</div>
+        <div class="trait-thumbs" id="traitBodySelector"></div>
+      </div>
+      <div class="trait-selector">
+        <div class="trait-cat-title">Cloak</div>
+        <div class="trait-thumbs" id="traitHoodieSelector"></div>
+      </div>
+      <div class="trait-selector">
+        <div class="trait-cat-title">Relic</div>
+        <div class="trait-thumbs" id="traitNeckSelector"></div>
+      </div>
+      <div class="trait-selector">
+        <div class="trait-cat-title">Sight</div>
+        <div class="trait-thumbs" id="traitEyesSelector"></div>
+      </div>
+      <div class="trait-selector">
+        <div class="trait-cat-title">Artifact</div>
+        <div class="trait-thumbs" id="traitMouthSelector"></div>
+      </div>
+      <div class="trait-selector">
+        <div class="trait-cat-title">Crown</div>
+        <div class="trait-thumbs" id="traitHeadSelector"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CREW MODE ═══ -->
+  <div id="crewMode">
+    <div class="crew-header">
+      <h2>The Crew</h2>
+      <div class="crew-sub">12 random compositions from the trait pool</div>
+      <div class="crew-controls">
+        <button class="gen-btn" onclick="generateCrew()">New Crew</button>
+        <button class="gen-btn" onclick="showGeneratorMode()">Back to Generator</button>
+      </div>
+    </div>
+    <div class="crew-grid" id="crewGrid"></div>
+  </div>
+
+  <!-- ═══ BATCH RENDER MODE ═══ -->
+  <div id="batchMode">
+    <div class="batch-header">
+      <h2>Batch Render</h2>
+      <div class="batch-sub">Generate and download multiple renders at once</div>
+      <div class="batch-controls">
+        <button class="gen-btn" onclick="batchRender(6)">Render 6</button>
+        <button class="gen-btn" onclick="batchRender(12)">Render 12</button>
+        <button class="gen-btn" onclick="batchRender(24)">Render 24</button>
+        <button class="gen-btn" onclick="showGeneratorMode()">Back to Generator</button>
+      </div>
+    </div>
+    <div class="batch-grid" id="batchGrid"></div>
+    <div class="batch-download-all" id="batchDownloadAll" style="display:none;">
+      <button class="gen-btn" onclick="downloadAllBatch()">Save All</button>
+    </div>
+  </div>
+</div>
+
+<script src="trait_data_24.js"></script>
+<script>
+// ═══ TRAIT CONFIG ═══
+// Paths relative to this file — adjust as needed
+var TRAIT_BASE = '../../../argonauts_new/';
+
+var traits = {
+  background: {
+    folder: TRAIT_BASE + 'background/',
+    files: ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','yellow_new.png','ancient.png','blackgrey.png','bubblegum.png','MuseGreen.png','alien_ice_prism.png','alien_wide_violet.png'],
+    optional: false
+  },
+  body: {
+    folder: TRAIT_BASE + 'BODY/new_body/',
+    files: ['alienfixed.png','common_bone_2.png','common_bone.png','coral.png','flowers_bare.png','flowers_with.png','gold.png','petrified.png','radioactive.png','silver.png'],
+    optional: false
+  },
+  hoodie: {
+    folder: TRAIT_BASE + 'Hoodie/',
+    files: ['Black.png','servant.png'],
+    optional: true
+  },
+  neck: {
+    folder: TRAIT_BASE + 'neck/',
+    files: ['gold.png'],
+    optional: true
+  },
+  eyes: {
+    folder: TRAIT_BASE + 'eyes/',
+    files: ['3D GLASSES.png','Alien_eyepatch.png','Glasses.png','cozomo.png','digital_frames.png','eyepatch.png','shades.png'],
+    optional: true
+  },
+  mouth: {
+    folder: TRAIT_BASE + 'mouth/',
+    files: ['vape2.png','woodpipe.png'],
+    optional: true
+  },
+  head: {
+    folder: TRAIT_BASE + 'Head/',
+    files: ['Orange Beanie.png','bandana.png','golden_fleece.png','headband.png','purphat.png'],
+    optional: true
+  }
+};
+
+var currentTraits = {
+  background:null, body:null,
+  hoodie:'none', neck:'none', eyes:'none', mouth:'none', head:'none'
+};
+
+var imageCache = {};
+var isRapidMode = false;
+var rapidInterval = null;
+var renderedCount = 0;
+
+// Crew names
+var crewNames = [
+  'Heracles','Orpheus','Castor','Pollux','Atalanta','Peleus',
+  'Telamon','Admetus','Acastus','Meleager','Idmon','Tiphys',
+  'Zetes','Calais','Euphemus','Periclymenus','Ancaeus','Erginus',
+  'Laertes','Autolycus','Iphitus','Mopsus','Eurytus','Echion'
+];
+
+// ═══ ALIEN GLOW CONFIG ═══
+var alienBackgrounds = [
+  'alien_ice_prism_pink','alien_violet_pink','alien_violet_cyan',
+  'alien_navy_pink','alien_void_pink','alien_void_blue',
+  'alien_void_cyan','alien_vig_navy_blue','alien_vig_void_teal'
+];
+var alienBgWeights = [12,14,14,10,12,12,12,7,7];
+var normalBackgrounds = ['BLUSH.png','OFFWHITE.png','PUNKBLUE.png','yellow_new.png','ancient.png','blackgrey.png','bubblegum.png','MuseGreen.png'];
+
+var alienGlowConfig = {
+  'alien_ice_prism_pink':  { bgType:'file', bgFile:'alien_ice_prism.png',    glowColor:[255,140,180], glowR:14, glowS:0.5 },
+  'alien_violet_pink':     { bgType:'file', bgFile:'alien_wide_violet.png',  glowColor:[255,140,180], glowR:14, glowS:0.5 },
+  'alien_violet_cyan':     { bgType:'file', bgFile:'alien_wide_violet.png',  glowColor:[100,240,220], glowR:14, glowS:0.5 },
+  'alien_navy_pink':       { bgType:'solid', bgColor:[15,18,40],             glowColor:[255,140,180], glowR:14, glowS:0.5 },
+  'alien_void_pink':       { bgType:'solid', bgColor:[8,8,12],               glowColor:[255,140,180], glowR:14, glowS:0.5 },
+  'alien_void_blue':       { bgType:'solid', bgColor:[8,8,12],               glowColor:[120,180,255], glowR:14, glowS:0.5 },
+  'alien_void_cyan':       { bgType:'solid', bgColor:[8,8,12],               glowColor:[100,240,220], glowR:14, glowS:0.5 },
+  'alien_vig_navy_blue':   { bgType:'vignette', bgCenter:[25,30,60], bgEdge:[5,5,15],   glowColor:[120,180,255], glowR:14, glowS:0.5 },
+  'alien_vig_void_teal':   { bgType:'vignette', bgCenter:[20,20,25], bgEdge:[2,2,4],    glowColor:[80,220,200],  glowR:16, glowS:0.6 },
+};
+var alienBgNoBlackHoodie = ['alien_navy_pink','alien_vig_navy_blue','alien_vig_void_teal'];
+
+// ═══ RARITY WEIGHTS ═══
+var traitRarity = {
+  body: {
+    'alienfixed.png':    { weight:7,    tier:'Legendary',  color:'#23a6cb' },
+    'radioactive.png':   { weight:24,   tier:'Mythic',     color:'#78ff4c' },
+    'gold.png':          { weight:88,   tier:'Ultra Rare', color:'#dfb747' },
+    'petrified.png':     { weight:300,  tier:'Rare',       color:'#b0a090' },
+    'flowers_bare.png':  { weight:500,  tier:'Uncommon+',  color:'#ff88aa' },
+    'coral.png':         { weight:800,  tier:'Uncommon',   color:'#ff7766' },
+    'silver.png':        { weight:1300, tier:'Common+',    color:'#c0c0c0' },
+    'common_bone_2.png': { weight:2500, tier:'Common',     color:'#aa8855' },
+    'common_bone.png':   { weight:4481, tier:'Base',       color:'#6b5d4d' }
+  },
+  background: {
+    'bubblegum.png':  { weight:4,  tier:'Ultra Rare', color:'#ff66aa' },
+    'yellow_new.png': { weight:6,  tier:'Rare+',      color:'#ccaa44' },
+    'blackgrey.png':  { weight:8,  tier:'Rare',       color:'#888888' },
+    'MuseGreen.png':  { weight:10, tier:'Rare',       color:'#44cc88' },
+    'ancient.png':    { weight:12, tier:'Uncommon',    color:'#8a7a5a' },
+    'PUNKBLUE.png':   { weight:16, tier:'Uncommon',    color:'#5588cc' },
+    'BLUSH.png':      { weight:20, tier:'Common',      color:'#cc8888' },
+    'OFFWHITE.png':   { weight:22, tier:'Common',      color:'#ddd8cc' },
+    'alien_ice_prism_pink':  { weight:0, tier:'Legendary', color:'#ffb0c8' },
+    'alien_violet_pink':     { weight:0, tier:'Legendary', color:'#ff8cb4' },
+    'alien_violet_cyan':     { weight:0, tier:'Legendary', color:'#64f0dc' },
+    'alien_navy_pink':       { weight:0, tier:'Legendary', color:'#ff8cb4' },
+    'alien_void_pink':       { weight:0, tier:'Legendary', color:'#ff8cb4' },
+    'alien_void_blue':       { weight:0, tier:'Legendary', color:'#78b4ff' },
+    'alien_void_cyan':       { weight:0, tier:'Legendary', color:'#64f0dc' },
+    'alien_vig_navy_blue':   { weight:0, tier:'Legendary', color:'#78b4ff' },
+    'alien_vig_void_teal':   { weight:0, tier:'Legendary', color:'#50dcc8' },
+  },
+  hoodie: {
+    'none':         { weight:820, tier:null, color:null },
+    'servant.png':  { weight:78,  tier:'Rare',   color:'#be8c25' },
+    'Black.png':    { weight:102, tier:'Common', color:'#444444' }
+  },
+  neck: {
+    'none':      { weight:880, tier:null, color:null },
+    'gold.png':  { weight:120, tier:'Uncommon', color:'#dfb747' }
+  },
+  eyes: {
+    'none':                 { weight:635, tier:null, color:null },
+    'shades.png':           { weight:70,  tier:'Common',     color:'#333333' },
+    'Glasses.png':          { weight:60,  tier:'Common',     color:'#8888aa' },
+    'digital_frames.png':   { weight:55,  tier:'Common+',    color:'#44ccff' },
+    'eyepatch.png':         { weight:50,  tier:'Uncommon',   color:'#554433' },
+    '3D GLASSES.png':       { weight:45,  tier:'Uncommon',   color:'#ff4444' },
+    'cozomo.png':           { weight:35,  tier:'Rare',       color:'#aa66dd' },
+    'Alien_eyepatch.png':   { weight:30,  tier:'Rare',       color:'#23a6cb' }
+  },
+  mouth: {
+    'none':          { weight:780, tier:null, color:null },
+    'woodpipe.png':  { weight:130, tier:'Uncommon', color:'#8B6914' },
+    'vape2.png':     { weight:90,  tier:'Rare',     color:'#aaddff' }
+  },
+  head: {
+    'none':               { weight:630, tier:null, color:null },
+    'headband.png':       { weight:65,  tier:'Common',     color:'#cc4444' },
+    'bandana.png':        { weight:55,  tier:'Common+',    color:'#4466aa' },
+    'Orange Beanie.png':  { weight:50,  tier:'Uncommon',   color:'#ff8833' },
+    'purphat.png':        { weight:50,  tier:'Uncommon+',  color:'#8844cc' },
+    'golden_fleece.png':  { weight:50,  tier:'Rare',       color:'#dfb747' }
+  }
+};
+
+// ═══ INIT ═══
+async function init(){
+  initVignetteCache();
+  for(var tn in traits){
+    if(traits.hasOwnProperty(tn)) initTraitSelector(tn, traits[tn]);
+  }
+  // Load 400x400 originals for thumbnails (rendering uses pre-baked TRAIT_B64)
+  preloadAllImages();
+  randomizeTraits();
+}
+
+// Traits hidden from selector (internally used but not shown as thumbnail)
+var hiddenFromSelector = { 'flowers_bare.png': true };
+
+// Display names for thumbnails
+var thumbNames = {
+  'flowers_with.png': 'Floral',
+  'alienfixed.png': 'Alien',
+  'common_bone_2.png': 'Bone II',
+  'common_bone.png': 'Bone',
+  'yellow_new.png': 'Yellow',
+  'alien_ice_prism.png': 'Ice Prism',
+  'alien_wide_violet.png': 'Wide Violet',
+  'digital_frames.png': 'Digi Frames',
+  'Alien_eyepatch.png': 'Alien Patch',
+  '3D GLASSES.png': '3D Glasses',
+  'Orange Beanie.png': 'Orange Bean.',
+  'golden_fleece.png': 'Gold Fleece',
+  'vape2.png': 'Vape',
+  'woodpipe.png': 'Pipe'
+};
+
+function initTraitSelector(traitName, traitData){
+  var sel = document.getElementById('trait'+capitalize(traitName)+'Selector');
+  if(!sel) return;
+  if(traitData.optional) sel.appendChild(createThumb(traitName,'none'));
+  for(var i=0;i<traitData.files.length;i++){
+    if(hiddenFromSelector[traitData.files[i]]) continue;
+    sel.appendChild(createThumb(traitName, traitData.files[i]));
+  }
+}
+
+function createThumb(traitName, file){
+  var div = document.createElement('div');
+  div.className = 'trait-thumb';
+  div.onclick = (function(tn,f){ return function(){ selectTrait(tn,f); }; })(traitName,file);
+  var imgC = document.createElement('div');
+  imgC.className = 'thumb-img';
+  if(file !== 'none'){
+    var img = document.createElement('img');
+    // Use pre-baked 24x24 base64 if available (works online), fallback to file path
+    var b64Key = traitName + '/' + file;
+    img.src = (typeof TRAIT_B64 !== 'undefined' && TRAIT_B64[b64Key]) ? TRAIT_B64[b64Key] : traits[traitName].folder + file;
+    img.alt = file;
+    imgC.appendChild(img);
+  } else {
+    imgC.textContent = '\u2014';
+    imgC.style.color = 'var(--ink-faint)';
+    imgC.style.fontSize = '18px';
+  }
+  var label = document.createElement('div');
+  label.className = 'thumb-label';
+  label.textContent = file === 'none' ? 'bare' : (thumbNames[file] || file.replace('.png','').substring(0,12));
+  div.appendChild(imgC);
+  div.appendChild(label);
+  div.dataset.trait = traitName;
+  div.dataset.file = file;
+  return div;
+}
+
+function selectTrait(traitName, file){
+  currentTraits[traitName] = file;
+  applyTraitRules();
+  updateSelectors();
+  renderPreview();
+}
+
+function updateSelectors(){
+  for(var tn in currentTraits){
+    if(!currentTraits.hasOwnProperty(tn)) continue;
+    var val = currentTraits[tn];
+    // Map hidden variants to their visible counterpart for highlighting
+    if(val === 'flowers_bare.png') val = 'flowers_with.png';
+    var thumbs = document.querySelectorAll('[data-trait="'+tn+'"]');
+    for(var i=0;i<thumbs.length;i++){
+      if(thumbs[i].dataset.file === val) thumbs[i].classList.add('selected');
+      else thumbs[i].classList.remove('selected');
+    }
+  }
+}
+
+// ═══ RANDOMIZE ═══
+function randomizeTraits(){
+  currentTraits.background = weightedRoll('background');
+  currentTraits.body = weightedRoll('body');
+  currentTraits.hoodie = weightedRoll('hoodie');
+  currentTraits.neck = weightedRoll('neck');
+  currentTraits.eyes = weightedRoll('eyes');
+  currentTraits.mouth = weightedRoll('mouth');
+  currentTraits.head = weightedRoll('head');
+  applyTraitRules();
+  renderedCount++;
+  document.getElementById('renderedCount').textContent = renderedCount;
+  updateSelectors();
+  renderPreview();
+}
+
+function weightedRoll(category){
+  var table = traitRarity[category];
+  if(!table) return 'none';
+  var totalWeight = 0;
+  for(var k in table) totalWeight += table[k].weight;
+  var roll = Math.random() * totalWeight, cumulative = 0;
+  for(var k in table){
+    cumulative += table[k].weight;
+    if(roll < cumulative) return k;
+  }
+  return Object.keys(table)[0];
+}
+
+function weightedAlienBgRoll(){
+  var total = 0;
+  for(var i=0;i<alienBgWeights.length;i++) total += alienBgWeights[i];
+  var roll = Math.random() * total, cum = 0;
+  for(var i=0;i<alienBackgrounds.length;i++){
+    cum += alienBgWeights[i];
+    if(roll < cum) return alienBackgrounds[i];
+  }
+  return alienBackgrounds[0];
+}
+
+// ═══ TRAIT RULES ═══
+function applyTraitRules(){
+  if(currentTraits.body === 'alienfixed.png'){
+    if(alienBackgrounds.indexOf(currentTraits.background) === -1)
+      currentTraits.background = weightedAlienBgRoll();
+  } else {
+    if(alienBackgrounds.indexOf(currentTraits.background) !== -1){
+      currentTraits.background = weightedRoll('background');
+      if(alienBackgrounds.indexOf(currentTraits.background) !== -1)
+        currentTraits.background = normalBackgrounds[Math.floor(Math.random()*normalBackgrounds.length)];
+    }
+  }
+  if(alienBgNoBlackHoodie.indexOf(currentTraits.background) !== -1 && currentTraits.hoodie === 'Black.png')
+    currentTraits.hoodie = 'none';
+  if(currentTraits.hoodie !== 'none' && currentTraits.head !== 'none'){
+    if(Math.random() > 0.5) currentTraits.head = 'none';
+    else currentTraits.hoodie = 'none';
+  }
+  if(currentTraits.body === 'coral.png') currentTraits.hoodie = 'none';
+  if(currentTraits.body !== 'alienfixed.png' && currentTraits.eyes === 'Alien_eyepatch.png') currentTraits.eyes = 'none';
+  if(currentTraits.body === 'alienfixed.png' && currentTraits.eyes === 'digital_frames.png') currentTraits.eyes = 'none';
+  if(currentTraits.body === 'alienfixed.png' && (currentTraits.eyes === 'eyepatch.png' || currentTraits.eyes === 'Alien_eyepatch.png' || currentTraits.eyes === 'shades.png')) currentTraits.eyes = 'none';
+  if((currentTraits.body === 'radioactive.png' || currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png') && currentTraits.eyes === 'shades.png') currentTraits.eyes = 'none';
+  if((currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png') && currentTraits.eyes === 'digital_frames.png') currentTraits.eyes = 'none';
+  if(currentTraits.body !== 'gold.png' && currentTraits.head === 'golden_fleece.png') currentTraits.head = 'none';
+  if((currentTraits.body === 'gold.png' || currentTraits.body === 'alienfixed.png') && currentTraits.neck === 'gold.png') currentTraits.neck = 'none';
+  if(currentTraits.background === 'bubblegum.png' && currentTraits.body === 'radioactive.png') currentTraits.body = 'common_bone.png';
+  if(currentTraits.background === 'blackgrey.png' && currentTraits.eyes === 'eyepatch.png') currentTraits.eyes = 'none';
+  if(currentTraits.background === 'blackgrey.png' && currentTraits.hoodie === 'none' && currentTraits.eyes === 'shades.png') currentTraits.eyes = 'none';
+  if(currentTraits.body === 'radioactive.png' && currentTraits.head === 'purphat.png') currentTraits.head = 'none';
+  if((currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png') && currentTraits.head === 'Orange Beanie.png') currentTraits.head = 'none';
+  if(currentTraits.body === 'flowers_bare.png' || currentTraits.body === 'flowers_with.png'){
+    var hasClothing = (currentTraits.hoodie !== 'none' || (currentTraits.head !== 'none' && currentTraits.head !== 'headband.png'));
+    currentTraits.body = hasClothing ? 'flowers_with.png' : 'flowers_bare.png';
+  }
+}
+
+// ═══ IMAGE LOADING ═══
+// Pre-baked 24x24 base64 PNGs come from trait_data_24.js (generated by Python PIL Image.NEAREST).
+// We also load 400x400 originals for thumbnails only.
+
+async function preloadAllImages(){
+  var promises = [];
+  for(var tn in traits){
+    if(!traits.hasOwnProperty(tn)) continue;
+    for(var i=0;i<traits[tn].files.length;i++){
+      promises.push(loadImage(traits[tn].folder + traits[tn].files[i]));
+    }
+  }
+  await Promise.all(promises);
+}
+
+function loadImage(src){
+  return new Promise(function(resolve){
+    if(imageCache[src]){ resolve(imageCache[src]); return; }
+    var img = new Image();
+    img.onload = function(){ imageCache[src] = img; resolve(img); };
+    img.onerror = function(){ console.warn('Failed: '+src); resolve(null); };
+    img.src = src;
+  });
+}
+
+// Get the pre-baked 24x24 base64 data URI for a trait
+function getB64(traitName, file){
+  var key = traitName + '/' + file;
+  return TRAIT_B64[key] || null;
+}
+
+// ═══ RENDER — SVG BUILDER ═══
+// Builds real SVGs with stacked <image> tags, identical to on-chain format.
+// Displayed via <img src="data:image/svg+xml;base64,..."> with image-rendering:pixelated.
+// Same approach as mint_simulation.html — crisp at any scale.
+
+// Generate a 24x24 vignette background as base64 PNG
+function makeVignetteB64(center, edge){
+  var c = document.createElement('canvas');
+  c.width = 24; c.height = 24;
+  var ctx = c.getContext('2d');
+  var cx = 12, cy = 12, maxDist = Math.sqrt(cx*cx+cy*cy);
+  var imgData = ctx.createImageData(24, 24);
+  for(var y=0; y<24; y++){
+    for(var x=0; x<24; x++){
+      var dist = Math.sqrt((x-cx)*(x-cx)+(y-cy)*(y-cy));
+      var t = Math.min(dist/maxDist, 1.0); t = Math.pow(t, 1.5);
+      var idx = (y*24+x)*4;
+      imgData.data[idx]   = Math.round(center[0]*(1-t)+edge[0]*t);
+      imgData.data[idx+1] = Math.round(center[1]*(1-t)+edge[1]*t);
+      imgData.data[idx+2] = Math.round(center[2]*(1-t)+edge[2]*t);
+      imgData.data[idx+3] = 255;
+    }
+  }
+  ctx.putImageData(imgData,0,0);
+  return c.toDataURL('image/png');
+}
+
+// Pre-cache vignette backgrounds at init
+var vignetteCache = {};
+function initVignetteCache(){
+  for(var key in alienGlowConfig){
+    var cfg = alienGlowConfig[key];
+    if(cfg.bgType === 'vignette'){
+      vignetteCache[key] = makeVignetteB64(cfg.bgCenter, cfg.bgEdge);
+    }
+  }
+}
+
+function buildSVG(ts){
+  var bgKey = ts.background;
+  var isGlowBg = alienGlowConfig.hasOwnProperty(bgKey);
+  var images = [];
+  var defs = '';
+
+  if(isGlowBg){
+    var cfg = alienGlowConfig[bgKey];
+    // Background
+    if(cfg.bgType === 'file'){
+      var bgB64 = getB64('background', cfg.bgFile);
+      if(bgB64) images.push('<image href="'+bgB64+'" width="24" height="24"/>');
+    } else if(cfg.bgType === 'solid'){
+      images.push('<rect width="24" height="24" fill="rgb('+cfg.bgColor.join(',')+')"/>');
+    } else if(cfg.bgType === 'vignette'){
+      var vigB64 = vignetteCache[bgKey];
+      if(vigB64) images.push('<image href="'+vigB64+'" width="24" height="24"/>');
+    }
+    // Glow filter — exact on-chain format
+    var gc = cfg.glowColor;
+    defs = '<defs><filter id="glow" x="-80%" y="-80%" width="260%" height="260%">' +
+      '<feGaussianBlur in="SourceAlpha" stdDeviation="1" result="blur"/>' +
+      '<feFlood flood-color="rgb('+gc[0]+','+gc[1]+','+gc[2]+')" flood-opacity="'+cfg.glowS.toFixed(2)+'"/>' +
+      '<feComposite in2="blur" operator="in" result="glow"/>' +
+      '<feMerge><feMergeNode in="glow"/><feMergeNode in="glow"/></feMerge>' +
+      '</filter></defs>';
+    // Character layers with glow + plain
+    var layerImgs = [];
+    var co = ['body','eyes','hoodie','neck','mouth','head'];
+    for(var i=0;i<co.length;i++){
+      var f=ts[co[i]]; if(f==='none') continue;
+      var b = getB64(co[i], f);
+      if(b) layerImgs.push('<image href="'+b+'" width="24" height="24"/>');
+    }
+    images.push('<g filter="url(#glow)">'+layerImgs.join('')+'</g>');
+    images.push('<g>'+layerImgs.join('')+'</g>');
+  } else {
+    // Standard pipeline — stacked <image> tags
+    var order = ['background','body','eyes','hoodie','neck','mouth','head'];
+    for(var i=0;i<order.length;i++){
+      var f = ts[order[i]];
+      if(f === 'none') continue;
+      var b = getB64(order[i], f);
+      if(b) images.push('<image href="'+b+'" width="24" height="24"/>');
+    }
+  }
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="480" height="480" ' +
+    'style="image-rendering:pixelated;-webkit-image-rendering:pixelated">' +
+    defs + images.join('') + '</svg>';
+}
+
+function svgToDataUri(svgStr){
+  return 'data:image/svg+xml;base64,' + btoa(svgStr);
+}
+
+async function renderPreview(){
+  var img = document.getElementById('previewImg');
+  var svg = buildSVG(currentTraits);
+  img.src = svgToDataUri(svg);
+  updateTraitsDisplay();
+}
+
+function updateTraitsDisplay(){
+  var friendly = function(f){
+    if(f==='none') return '\u2014';
+    var n=f.replace('.png','');
+    if(n==='flowers_bare'||n==='flowers_with') n='Floral';
+    if(n==='digital_frames') n='Digital Frames';
+    if(n==='common_bone_2') n='Bone II';
+    if(n==='common_bone') n='Bone';
+    if(n==='alienfixed') n='Alien';
+    if(n==='yellow_new') n='Yellow';
+    if(n==='alien_ice_prism') n='Ice Prism';
+    if(n==='alien_wide_violet') n='Wide Violet';
+    n=n.replace(/_/g,' ');
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  };
+  var ids = {body:'traitBody',background:'traitBackground',hoodie:'traitHoodie',neck:'traitNeck',eyes:'traitEyes',mouth:'traitMouth',head:'traitHead'};
+  for(var cat in ids){
+    var el = document.getElementById(ids[cat]);
+    var val = currentTraits[cat];
+    var name = friendly(val);
+    var r = traitRarity[cat] && traitRarity[cat][val];
+    if(r && r.tier){
+      el.textContent = name + '  [' + r.tier + ']';
+      el.style.color = r.color;
+    } else {
+      el.textContent = name;
+      el.style.color = '';
+    }
+  }
+}
+
+// ═══ DOWNLOAD — SVG (on-chain format) ═══
+function downloadPFP(){
+  var svg = buildSVG(currentTraits);
+  var blob = new Blob([svg], {type:'image/svg+xml'});
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = url;
+  var name = (currentTraits.body||'argonaut').replace('.png','');
+  link.download = 'argonaut_'+name+'_'+Date.now()+'.svg';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// ═══ MODE SWITCHING ═══
+function showGeneratorMode(){
+  document.getElementById('generatorMode').style.display = 'grid';
+  document.getElementById('crewMode').style.display = 'none';
+  document.getElementById('batchMode').style.display = 'none';
+}
+
+function showCrewMode(){
+  document.getElementById('generatorMode').style.display = 'none';
+  document.getElementById('crewMode').style.display = 'block';
+  document.getElementById('batchMode').style.display = 'none';
+  generateCrew();
+}
+
+function showBatchMode(){
+  document.getElementById('generatorMode').style.display = 'none';
+  document.getElementById('crewMode').style.display = 'none';
+  document.getElementById('batchMode').style.display = 'block';
+  batchRender(6);
+}
+
+// ═══ CREW ═══
+function generateCrew(){
+  var grid = document.getElementById('crewGrid');
+  grid.innerHTML = '';
+  var savedTraits = Object.assign({}, currentTraits);
+
+  for(var i=0;i<12;i++){
+    var item = document.createElement('div');
+    item.className = 'crew-item';
+
+    var ts = {
+      background:weightedRoll('background'), body:weightedRoll('body'),
+      hoodie:weightedRoll('hoodie'), neck:weightedRoll('neck'),
+      eyes:weightedRoll('eyes'), mouth:weightedRoll('mouth'), head:weightedRoll('head')
+    };
+    currentTraits = ts;
+    applyTraitRules();
+    ts = Object.assign({}, currentTraits);
+
+    var img = document.createElement('img');
+    img.src = svgToDataUri(buildSVG(ts));
+
+    var label = document.createElement('div');
+    label.className = 'crew-item-label';
+    label.textContent = crewNames[i % crewNames.length];
+
+    item.appendChild(img);
+    item.appendChild(label);
+    item.onclick = (function(t){ return function(){
+      currentTraits = t;
+      showGeneratorMode();
+      updateSelectors();
+      renderPreview();
+    }; })(ts);
+    grid.appendChild(item);
+  }
+  currentTraits = savedTraits;
+}
+
+// ═══ BATCH RENDER ═══
+var batchEntries = [];
+
+function batchRender(count){
+  var grid = document.getElementById('batchGrid');
+  grid.innerHTML = '';
+  batchEntries = [];
+  var savedTraits = Object.assign({}, currentTraits);
+  document.getElementById('batchDownloadAll').style.display = 'none';
+
+  for(var i=0;i<count;i++){
+    var item = document.createElement('div');
+    item.className = 'batch-item';
+
+    var ts = {
+      background:weightedRoll('background'), body:weightedRoll('body'),
+      hoodie:weightedRoll('hoodie'), neck:weightedRoll('neck'),
+      eyes:weightedRoll('eyes'), mouth:weightedRoll('mouth'), head:weightedRoll('head')
+    };
+    currentTraits = ts;
+    applyTraitRules();
+    ts = Object.assign({}, currentTraits);
+
+    var img = document.createElement('img');
+    img.src = svgToDataUri(buildSVG(ts));
+    batchEntries.push({ traits:ts });
+
+    var friendly = function(f){
+      if(f==='none') return '\u2014';
+      return f.replace('.png','').replace(/_/g,' ').substring(0,14);
+    };
+
+    var meta = document.createElement('div');
+    meta.className = 'batch-item-meta';
+    meta.innerHTML = friendly(ts.body) + ' / ' + friendly(ts.background);
+
+    item.appendChild(img);
+    item.appendChild(meta);
+    item.onclick = (function(t){ return function(){
+      currentTraits = t;
+      showGeneratorMode();
+      updateSelectors();
+      renderPreview();
+    }; })(ts);
+    grid.appendChild(item);
+    renderedCount++;
+  }
+  document.getElementById('renderedCount').textContent = renderedCount;
+  document.getElementById('batchDownloadAll').style.display = 'block';
+  currentTraits = savedTraits;
+}
+
+function downloadAllBatch(){
+  batchEntries.forEach(function(entry, i){
+    var svg = buildSVG(entry.traits);
+    var blob = new Blob([svg], {type:'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    var name = (entry.traits.body||'argonaut').replace('.png','');
+    link.download = 'argonaut_batch_'+(i+1)+'_'+name+'.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  });
+}
+
+// ═══ RAPID ═══
+function toggleRapid(){
+  var btn = document.getElementById('rapidBtn');
+  isRapidMode = !isRapidMode;
+  if(isRapidMode){
+    btn.classList.add('active');
+    btn.textContent = 'Stop';
+    rapidInterval = setInterval(randomizeTraits, 400);
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = 'Rapid';
+    clearInterval(rapidInterval);
+    rapidInterval = null;
+  }
+}
+
+// ═══ KEYBOARD ═══
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    if(document.getElementById('crewMode').style.display !== 'none' ||
+       document.getElementById('batchMode').style.display !== 'none'){
+      showGeneratorMode();
+    }
+  }
+  if(e.key === ' ' || e.key === 'r'){
+    e.preventDefault();
+    randomizeTraits();
+  }
+});
+
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
