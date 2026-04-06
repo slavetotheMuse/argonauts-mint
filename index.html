@@ -242,6 +242,10 @@ nav {
   width: 72px;
   height: 72px;
   image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  -webkit-image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
   border: 1px solid var(--gold-pale);
   opacity: 0.85;
   transition: all 0.4s;
@@ -316,7 +320,10 @@ nav {
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
   -webkit-image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
   display: block;
 }
 
@@ -520,7 +527,10 @@ nav {
   height: 100%;
   display: block;
   image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
   -webkit-image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
 }
 
 .mint-frame {
