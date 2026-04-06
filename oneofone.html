@@ -538,34 +538,12 @@ function startOneOfOneRenderer() {
 }
 
 function renderLoop(ctx, images) {
-  const allKeys = Object.keys(images);
-  const modes = ['GLITCH','FUSION','DECAY','CHAOS','OVERLOAD','MEMORY'];
-  let currentMode = 0;
-  let modeTimer = 0;
-  const MODE_DURATION = 180; // frames per mode
+  document.getElementById('theOneMode').textContent = 'GLITCH';
 
   function frame() {
     frameCount++;
-    modeTimer++;
-
-    // Cycle modes
-    if (modeTimer > MODE_DURATION) {
-      modeTimer = 0;
-      currentMode = (currentMode + 1) % modes.length;
-      document.getElementById('theOneMode').textContent = 'MODE: ' + modes[currentMode];
-    }
-
-    const mode = modes[currentMode];
     ctx.clearRect(0, 0, 480, 480);
-
-    switch(mode) {
-      case 'GLITCH':   renderGlitch(ctx, images); break;
-      case 'FUSION':   renderFusion(ctx, images); break;
-      case 'DECAY':    renderDecay(ctx, images); break;
-      case 'CHAOS':    renderChaos(ctx, images); break;
-      case 'OVERLOAD': renderOverload(ctx, images); break;
-      case 'MEMORY':   renderMemory(ctx, images); break;
-    }
+    renderGlitch(ctx, images);
 
     // Scanline overlay on canvas
     if (frameCount % 3 === 0) {
@@ -579,7 +557,7 @@ function renderLoop(ctx, images) {
   }
 
   frame();
-  updateMeta(modes[currentMode]);
+  updateMeta('GLITCH');
 }
 
 // ── MODE: GLITCH ──
