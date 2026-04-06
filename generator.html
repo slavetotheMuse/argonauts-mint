@@ -752,14 +752,17 @@ var hiddenFromSelector = { 'flowers_bare.png': true };
 var thumbNames = {
   'flowers_with.png': 'Floral',
   'alienfixed.png': 'Alien',
-  'common_bone_2.png': 'Bone II',
+  'common_bone_2.png': 'Prehistoric',
   'common_bone.png': 'Bone',
   'yellow_new.png': 'Yellow',
   'alien_ice_prism.png': 'Ice Prism',
   'alien_wide_violet.png': 'Wide Violet',
-  'digital_frames.png': 'Digi Frames',
-  'Alien_eyepatch.png': 'Alien Patch',
+  'digital_frames.png': 'Digital',
+  'Alien_eyepatch.png': 'Eye Patch',
+  'eyepatch.png': 'Eye Patch',
   '3D GLASSES.png': '3D Glasses',
+  'Black.png': 'Death',
+  'cozomo.png': 'Designer',
   'Orange Beanie.png': 'Orange Bean.',
   'golden_fleece.png': 'Gold Fleece',
   'vape2.png': 'Vape',
@@ -1039,13 +1042,16 @@ function updateTraitsDisplay(){
     if(f==='none') return '\u2014';
     var n=f.replace('.png','');
     if(n==='flowers_bare'||n==='flowers_with') n='Floral';
-    if(n==='digital_frames') n='Digital Frames';
-    if(n==='common_bone_2') n='Bone II';
+    if(n==='digital_frames') n='Digital';
+    if(n==='common_bone_2') n='Prehistoric';
     if(n==='common_bone') n='Bone';
     if(n==='alienfixed') n='Alien';
     if(n==='yellow_new') n='Yellow';
     if(n==='alien_ice_prism') n='Ice Prism';
     if(n==='alien_wide_violet') n='Wide Violet';
+    if(n==='Black') n='Death';
+    if(n==='cozomo') n='Designer';
+    if(n==='eyepatch'||n==='Alien_eyepatch') n='Eye Patch';
     n=n.replace(/_/g,' ');
     return n.charAt(0).toUpperCase() + n.slice(1);
   };
