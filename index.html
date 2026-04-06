@@ -504,41 +504,23 @@ nav {
 .mint-section {
   padding: 100px 24px 120px;
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
-  gap: 40px;
   position: relative;
 }
 
 .shuffle-box {
   width: 200px;
   height: 200px;
-  border: 1px solid var(--gold-pale);
-  background: white;
-  box-shadow: 0 2px 24px rgba(0,0,0,0.04);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
   flex-shrink: 0;
+  overflow: hidden;
 }
-.shuffle-box::before, .shuffle-box::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-color: var(--gold);
-  border-style: solid;
-  opacity: 0.55;
-}
-.shuffle-box::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
-.shuffle-box::after { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
 .shuffle-box img {
-  width: 160px;
-  height: 160px;
+  width: 100%;
+  height: 100%;
+  display: block;
   image-rendering: pixelated;
   -webkit-image-rendering: pixelated;
-  transition: opacity 0.4s ease;
 }
 
 .mint-frame {
@@ -1399,21 +1381,13 @@ function startShuffleBoxes() {
   rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
 
   setInterval(() => {
-    leftImg.style.opacity = '0';
-    setTimeout(() => {
-      leftIdx = randomSpecimen(rightIdx);
-      leftImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[leftIdx].svg;
-      leftImg.style.opacity = '1';
-    }, 400);
+    leftIdx = randomSpecimen(rightIdx);
+    leftImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[leftIdx].svg;
   }, 2500);
 
   setInterval(() => {
-    rightImg.style.opacity = '0';
-    setTimeout(() => {
-      rightIdx = randomSpecimen(leftIdx);
-      rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
-      rightImg.style.opacity = '1';
-    }, 400);
+    rightIdx = randomSpecimen(leftIdx);
+    rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
   }, 3200);
 }
 
