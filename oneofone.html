@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argonauts</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#1a1a18; --ink-faint:#8a8778; --gold:#dfb747; --gold-pale:#e8d9a0;
+  --parchment:#f5f0e3; --parchment-deep:#e8e0cc; --void:#0a0a0a;
+  --red:#c0392b; --glitch-cyan:#00fff2; --glitch-magenta:#ff00e6;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Playfair Display', serif;
+  background:var(--parchment);
+  color:var(--ink);
+  overflow-x:hidden;
+  transition: background 3s ease;
+}
+body.dying { background:#1a1511; color:#8a8778; }
+body.void { background:var(--void); color:#222; }
+
+/* ═══ PHASE INDICATOR ═══ */
+.phase-bar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(245,240,227,0.95);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--parchment-deep);
+  display:flex; justify-content:center; align-items:center;
+  padding:14px 24px; gap:24px;
+  transition: background 2s, border-color 2s;
+}
+body.dying .phase-bar { background:rgba(26,21,17,0.95); border-color:#2a2520; }
+body.void .phase-bar { background:rgba(10,10,10,0.95); border-color:#1a1a1a; }
+
+.phase-label {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink-faint);
+  transition: color 2s;
+}
+body.dying .phase-label { color:#5a5545; }
+body.void .phase-label { color:#222; }
+
+.phase-timer {
+  font-family:'JetBrains Mono', monospace;
+  font-size:22px; font-weight:300;
+  color:var(--gold);
+  letter-spacing:4px;
+  transition: color 1s;
+}
+.phase-timer.urgent { color:var(--red); }
+body.void .phase-timer { color:#1a1a1a; }
+
+/* ═══ HERO ═══ */
+.hero {
+  padding:120px 24px 80px;
+  text-align:center;
+  position:relative;
+}
+.hero h1 {
+  font-size:3.2em; font-weight:700; letter-spacing:8px;
+  text-transform:uppercase; margin-bottom:12px;
+  transition: all 2s;
+}
+body.dying .hero h1 { letter-spacing:20px; opacity:0.4; }
+body.void .hero h1 { opacity:0; }
+
+.hero .subtitle {
+  font-family:'JetBrains Mono', monospace;
+  font-size:13px; color:var(--ink-faint);
+  letter-spacing:2px; margin-bottom:40px;
+  transition: all 2s;
+}
+body.dying .hero .subtitle { color:#3a3530; }
+body.void .hero .subtitle { opacity:0; }
+
+.hero-stats {
+  display:flex; justify-content:center; gap:48px; margin-bottom:40px;
+}
+.hero-stat .num {
+  font-size:2em; font-weight:700; color:var(--gold);
+  transition: all 1s;
+}
+.hero-stat .label {
+  font-family:'JetBrains Mono', monospace;
+  font-size:9px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink-faint);
+}
+body.dying .hero-stat .num { color:#5a4a30; }
+body.void .hero-stats { opacity:0; }
+
+/* ═══ MINT SECTION (fake) ═══ */
+.mint-section {
+  padding:60px 24px;
+  display:flex; justify-content:center; align-items:center; gap:40px;
+  transition: all 2s;
+}
+.claim-box {
+  background:var(--parchment-deep);
+  border:1px solid var(--gold-pale);
+  border-radius:4px;
+  padding:40px;
+  text-align:center;
+  min-width:280px;
+  transition: all 2s;
+}
+body.dying .claim-box { border-color:#2a2520; background:#1a1511; opacity:0.3; }
+body.void .claim-box { opacity:0; }
+
+.claim-box h3 {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--gold); margin-bottom:16px;
+}
+.claim-btn {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; letter-spacing:3px; text-transform:uppercase;
+  background:var(--gold); color:var(--parchment);
+  border:none; padding:14px 32px; cursor:pointer;
+  transition: all 0.3s;
+}
+.claim-btn:hover { background:var(--ink); }
+
+/* ═══ SPECIMEN GRID ═══ */
+.grid-section {
+  padding:60px 24px;
+  text-align:center;
+}
+.grid-section h2 {
+  font-size:1.6em; font-weight:700; letter-spacing:4px;
+  text-transform:uppercase; margin-bottom:8px;
+  transition: all 2s;
+}
+.grid-section .sub {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; color:var(--ink-faint);
+  letter-spacing:2px; margin-bottom:32px;
+  transition: all 2s;
+}
+body.dying .grid-section h2 { opacity:0.3; }
+body.void .grid-section h2 { opacity:0; }
+
+.specimen-grid {
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:6px;
+  max-width:960px;
+  margin:0 auto;
+}
+.specimen-cell {
+  aspect-ratio:1;
+  overflow:hidden;
+  position:relative;
+  transition: all 0.3s;
+}
+.specimen-cell img {
+  width:100%; height:100%; display:block;
+  image-rendering:pixelated;
+  image-rendering:-moz-crisp-edges;
+  image-rendering:crisp-edges;
+  transition: all 0.5s;
+}
+
+/* ═══ GLITCH EFFECTS ═══ */
+.specimen-cell.glitching img {
+  animation: glitchShift 0.15s infinite;
+}
+.specimen-cell.dying {
+  opacity:0;
+  transform:scale(0.5);
+  transition: all 1.5s ease-in;
+}
+
+@keyframes glitchShift {
+  0%   { transform:translate(0,0); filter:none; }
+  20%  { transform:translate(-3px,1px); filter:hue-rotate(90deg) saturate(3); }
+  40%  { transform:translate(2px,-2px); filter:hue-rotate(180deg) brightness(1.5); }
+  60%  { transform:translate(-1px,3px); filter:hue-rotate(270deg) contrast(2); }
+  80%  { transform:translate(3px,-1px); filter:invert(1) hue-rotate(45deg); }
+  100% { transform:translate(0,0); filter:none; }
+}
+
+@keyframes scanline {
+  0%   { background-position:0 0; }
+  100% { background-position:0 100%; }
+}
+
+/* ═══ THE ONE — Final 1-of-1 ═══ */
+.the-one-container {
+  display:none;
+  padding:80px 24px;
+  text-align:center;
+  min-height:100vh;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+.the-one-container.active {
+  display:flex;
+}
+.the-one-frame {
+  width:480px; height:480px;
+  position:relative;
+  margin:0 auto 32px;
+  border:1px solid #222;
+  overflow:hidden;
+  background:#000;
+}
+.the-one-frame canvas {
+  width:100%; height:100%;
+  image-rendering:pixelated;
+  image-rendering:-moz-crisp-edges;
+  image-rendering:crisp-edges;
+}
+.the-one-meta {
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:2px;
+  color:#333;
+  max-width:480px; margin:0 auto;
+  text-align:left;
+}
+.the-one-meta .trait-dead {
+  color:#2a2520;
+  text-decoration:line-through;
+  margin:4px 0;
+}
+.the-one-meta .trait-consumed {
+  color:var(--red);
+  margin:4px 0;
+}
+.the-one-mode {
+  font-family:'JetBrains Mono', monospace;
+  font-size:9px; letter-spacing:4px; text-transform:uppercase;
+  color:#444; margin-top:24px;
+}
+
+/* ═══ SCANLINES OVERLAY ═══ */
+.scanlines {
+  display:none;
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  pointer-events:none; z-index:50;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  animation:scanline 8s linear infinite;
+}
+body.dying .scanlines { display:block; }
+body.void .scanlines { display:block; opacity:0.5; }
+
+/* ═══ CONTROLS (test only) ═══ */
+.test-controls {
+  position:fixed; bottom:20px; right:20px; z-index:200;
+  display:flex; flex-direction:column; gap:8px;
+}
+.test-btn {
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  background:#222; color:#888; border:1px solid #333;
+  padding:8px 16px; cursor:pointer;
+  transition:all 0.2s;
+}
+.test-btn:hover { color:#fff; border-color:#555; }
+.test-btn.active { color:var(--gold); border-color:var(--gold); }
+
+/* ═══ PROGRESS BAR ═══ */
+.destruction-progress {
+  position:fixed; bottom:0; left:0; right:0; height:3px;
+  z-index:100; background:transparent;
+}
+.destruction-progress .bar {
+  height:100%; width:0; background:var(--red);
+  transition:width 0.3s linear;
+}
+</style>
+</head>
+<body>
+
+<!-- SCANLINES OVERLAY -->
+<div class="scanlines"></div>
+
+<!-- PHASE BAR -->
+<div class="phase-bar">
+  <span class="phase-label" id="phaseLabel">Mint Opens In</span>
+  <span class="phase-timer" id="phaseTimer">03:00:00</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" id="heroSection">
+  <h1>Argonauts</h1>
+  <p class="subtitle">5,000 skeletal voyagers forged in the fires of Colchis. Fully on-chain.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num" id="supplyNum">4,999</div><div class="label">Supply</div></div>
+    <div class="hero-stat"><div class="num">56</div><div class="label">Traits</div></div>
+    <div class="hero-stat"><div class="num">22,680</div><div class="label">Combinations</div></div>
+  </div>
+</div>
+
+<!-- FAKE MINT SECTION -->
+<div class="mint-section" id="mintSection">
+  <div class="claim-box">
+    <h3>Claim Your Argonaut</h3>
+    <p style="font-size:14px;color:var(--ink-faint);margin-bottom:20px;font-style:italic;">For ACK collectors only</p>
+    <button class="claim-btn" id="claimBtn">Connect Wallet</button>
+  </div>
+</div>
+
+<!-- SPECIMEN GRID -->
+<div class="grid-section" id="gridSection">
+  <h2>Specimens</h2>
+  <p class="sub">30 palettes sampled from the art</p>
+  <div class="specimen-grid" id="specimenGrid"></div>
+</div>
+
+<!-- THE ONE (hidden until destruction completes) -->
+<div class="the-one-container" id="theOneContainer">
+  <div class="the-one-frame">
+    <canvas id="theOneCanvas" width="480" height="480"></canvas>
+  </div>
+  <div class="the-one-mode" id="theOneMode">MODE: GLITCH</div>
+  <div class="the-one-meta" id="theOneMeta"></div>
+</div>
+
+<!-- DESTRUCTION PROGRESS -->
+<div class="destruction-progress"><div class="bar" id="destructionBar"></div></div>
+
+<!-- TEST CONTROLS -->
+<div class="test-controls">
+  <button class="test-btn" onclick="startCountdown(10)">Test: 10s countdown</button>
+  <button class="test-btn" onclick="startCountdown(30)">Test: 30s countdown</button>
+  <button class="test-btn" onclick="triggerDestruction()">Test: Skip to destruction</button>
+  <button class="test-btn" onclick="skipToOne()">Test: Skip to 1-of-1</button>
+  <button class="test-btn" onclick="resetAll()">Reset</button>
+</div>
+
+<script src="specimen_data.js"></script>
+<script src="trait_data_24.js"></script>
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let phase = 'COUNTDOWN'; // COUNTDOWN, DESTROYING, ONE
+let countdownEnd = null;
+let countdownInterval = null;
+let destructionStep = 0;
+let oneOfOneInterval = null;
+let frameCount = 0;
+
+// Trait layer info for the 1-of-1 renderer
+const LAYERS = ['background','body','eyes','hoodie','neck','mouth','head'];
+let traitsByLayer = {};
+
+// Parse trait data into layers
+Object.keys(TRAIT_B64).forEach(key => {
+  const parts = key.split('/');
+  const layer = parts[0];
+  const name = parts[1].replace('.png','');
+  if (!traitsByLayer[layer]) traitsByLayer[layer] = [];
+  traitsByLayer[layer].push({ key, name, data: TRAIT_B64[key] });
+});
+
+// ═══════════════════════════════════════
+// INIT — Build the "mint page"
+// ═══════════════════════════════════════
+function init() {
+  const grid = document.getElementById('specimenGrid');
+  SPECIMEN_DATA.forEach((spec, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'specimen-cell';
+    cell.dataset.index = i;
+    const img = document.createElement('img');
+    img.src = 'data:image/svg+xml;base64,' + spec.svg;
+    cell.appendChild(img);
+    grid.appendChild(cell);
+  });
+}
+
+// ═══════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════
+function startCountdown(seconds) {
+  resetAll();
+  countdownEnd = Date.now() + seconds * 1000;
+  document.getElementById('phaseLabel').textContent = 'Mint Opens In';
+
+  countdownInterval = setInterval(() => {
+    const remaining = Math.max(0, countdownEnd - Date.now());
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const ms = Math.floor((remaining % 1000) / 10);
+
+    const timer = document.getElementById('phaseTimer');
+
+    if (remaining > 10000) {
+      timer.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      timer.classList.remove('urgent');
+    } else {
+      // Last 10 seconds — show milliseconds, red
+      timer.textContent = `${String(s).padStart(2,'0')}:${String(ms).padStart(2,'0')}`;
+      timer.classList.add('urgent');
+    }
+
+    if (remaining <= 0) {
+      clearInterval(countdownInterval);
+      timer.textContent = '00:00:00';
+      triggerDestruction();
+    }
+  }, 50);
+}
+
+// ═══════════════════════════════════════
+// DESTRUCTION SEQUENCE
+// ═══════════════════════════════════════
+function triggerDestruction() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  phase = 'DESTROYING';
+  destructionStep = 0;
+
+  // Phase bar shift
+  document.getElementById('phaseLabel').textContent = 'Deteriorating';
+  document.getElementById('phaseTimer').textContent = '';
+  document.getElementById('phaseTimer').classList.add('urgent');
+
+  // Body class
+  document.body.classList.add('dying');
+
+  // Start the destruction sequence
+  const cells = Array.from(document.querySelectorAll('.specimen-cell'));
+  const totalSteps = cells.length + 20; // extra steps for the morph
+
+  // Step 1: Glitch all cells
+  cells.forEach(c => c.classList.add('glitching'));
+
+  // Step 2: Start killing cells one by one with random delays
+  let killed = 0;
+  const killOrder = shuffle([...Array(cells.length).keys()]);
+
+  const killInterval = setInterval(() => {
+    if (killed >= cells.length) {
+      clearInterval(killInterval);
+      // All dead — begin morph
+      setTimeout(() => beginMorph(), 800);
+      return;
+    }
+
+    const idx = killOrder[killed];
+    const cell = cells[idx];
+    cell.classList.remove('glitching');
+    cell.classList.add('dying');
+    killed++;
+
+    // Update progress
+    const progress = (killed / totalSteps) * 100;
+    document.getElementById('destructionBar').style.width = progress + '%';
+
+    // Update supply counter
+    const remaining = Math.max(0, 4999 - Math.floor(killed * 166));
+    document.getElementById('supplyNum').textContent = remaining.toLocaleString();
+
+    // Swap random traits on surviving cells for chaos
+    cells.forEach(c => {
+      if (!c.classList.contains('dying') && Math.random() > 0.5) {
+        const randomSpec = SPECIMEN_DATA[Math.floor(Math.random() * SPECIMEN_DATA.length)];
+        c.querySelector('img').src = 'data:image/svg+xml;base64,' + randomSpec.svg;
+      }
+    });
+
+    // Phase label updates
+    if (killed === Math.floor(cells.length * 0.3)) {
+      document.getElementById('phaseLabel').textContent = 'Collapsing';
+    }
+    if (killed === Math.floor(cells.length * 0.6)) {
+      document.getElementById('phaseLabel').textContent = 'Dissolving';
+    }
+    if (killed === Math.floor(cells.length * 0.9)) {
+      document.getElementById('phaseLabel').textContent = 'Converging';
+      document.getElementById('supplyNum').textContent = '1';
+    }
+
+  }, 300);
+}
+
+function beginMorph() {
+  document.body.classList.remove('dying');
+  document.body.classList.add('void');
+
+  // Hide the mint page stuff
+  document.getElementById('heroSection').style.display = 'none';
+  document.getElementById('mintSection').style.display = 'none';
+  document.getElementById('gridSection').style.display = 'none';
+
+  // Show the 1-of-1
+  document.getElementById('theOneContainer').classList.add('active');
+  document.getElementById('phaseLabel').textContent = 'The One';
+  document.getElementById('phaseTimer').textContent = '#0';
+  document.getElementById('phaseTimer').classList.remove('urgent');
+  document.getElementById('destructionBar').style.width = '100%';
+  document.getElementById('destructionBar').style.background = '#333';
+
+  phase = 'ONE';
+  startOneOfOneRenderer();
+}
+
+// ═══════════════════════════════════════
+// THE 1-OF-1 DYNAMIC RENDERER
+// ═══════════════════════════════════════
+function startOneOfOneRenderer() {
+  const canvas = document.getElementById('theOneCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 480;
+  canvas.height = 480;
+  ctx.imageSmoothingEnabled = false;
+
+  // Preload all trait images
+  const allTraitImages = {};
+  let loadCount = 0;
+  const allKeys = Object.keys(TRAIT_B64);
+
+  allKeys.forEach(key => {
+    const img = new Image();
+    img.onload = () => {
+      allTraitImages[key] = img;
+      loadCount++;
+      if (loadCount === allKeys.length) {
+        // All loaded — start rendering
+        renderLoop(ctx, allTraitImages);
+      }
+    };
+    img.src = TRAIT_B64[key];
+  });
+}
+
+function renderLoop(ctx, images) {
+  const allKeys = Object.keys(images);
+  const modes = ['GLITCH','FUSION','DECAY','CHAOS','OVERLOAD','MEMORY'];
+  let currentMode = 0;
+  let modeTimer = 0;
+  const MODE_DURATION = 180; // frames per mode
+
+  function frame() {
+    frameCount++;
+    modeTimer++;
+
+    // Cycle modes
+    if (modeTimer > MODE_DURATION) {
+      modeTimer = 0;
+      currentMode = (currentMode + 1) % modes.length;
+      document.getElementById('theOneMode').textContent = 'MODE: ' + modes[currentMode];
+    }
+
+    const mode = modes[currentMode];
+    ctx.clearRect(0, 0, 480, 480);
+
+    switch(mode) {
+      case 'GLITCH':   renderGlitch(ctx, images); break;
+      case 'FUSION':   renderFusion(ctx, images); break;
+      case 'DECAY':    renderDecay(ctx, images); break;
+      case 'CHAOS':    renderChaos(ctx, images); break;
+      case 'OVERLOAD': renderOverload(ctx, images); break;
+      case 'MEMORY':   renderMemory(ctx, images); break;
+    }
+
+    // Scanline overlay on canvas
+    if (frameCount % 3 === 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.03)';
+      for (let y = 0; y < 480; y += 4) {
+        ctx.fillRect(0, y, 480, 2);
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  frame();
+  updateMeta(modes[currentMode]);
+}
+
+// ── MODE: GLITCH ──
+// Each layer offset by random pixels, wrong layers in wrong positions
+function renderGlitch(ctx, images) {
+  LAYERS.forEach((layer, li) => {
+    const traits = traitsByLayer[layer];
+    if (!traits || traits.length === 0) return;
+
+    // Pick a trait based on frame + layer offset
+    const idx = (frameCount + li * 7) % traits.length;
+    const img = images[traits[idx].key];
+    if (!img) return;
+
+    // Offset based on noise
+    const ox = Math.sin(frameCount * 0.1 + li) * (8 + li * 3);
+    const oy = Math.cos(frameCount * 0.13 + li * 2) * (5 + li * 2);
+
+    ctx.globalAlpha = 0.7 + Math.sin(frameCount * 0.2 + li) * 0.3;
+    ctx.drawImage(img, ox, oy, 480, 480);
+  });
+
+  // RGB split artifact
+  if (frameCount % 7 < 2) {
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.3;
+    const shift = Math.random() * 20 - 10;
+    ctx.drawImage(ctx.canvas, shift, 0);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ── MODE: FUSION ──
+// All traits from same layer stacked with blending
+function renderFusion(ctx, images) {
+  LAYERS.forEach((layer, li) => {
+    const traits = traitsByLayer[layer];
+    if (!traits || traits.length === 0) return;
+
+    // Slowly cycle which traits are visible
+    const visibleCount = Math.min(traits.length, 3 + Math.floor(Math.sin(frameCount * 0.02 + li) * 2));
+    const startIdx = Math.floor(frameCount * 0.03 + li * 3) % traits.length;
+
+    for (let t = 0; t < visibleCount; t++) {
+      const idx = (startIdx + t) % traits.length;
+      const img = images[traits[idx].key];
+      if (!img) continue;
+
+      ctx.globalAlpha = 0.15 + (0.6 / visibleCount);
+      ctx.globalCompositeOperation = t % 2 === 0 ? 'source-over' : 'lighter';
+      ctx.drawImage(img, 0, 0, 480, 480);
+    }
+  });
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
+// ── MODE: DECAY ──
+// Layers progressively disappear, leaving ghost traces
+function renderDecay(ctx, images) {
+  const decayPhase = (frameCount % (MODE_DURATION * 2)) / (MODE_DURATION * 2); // 0-1
+  const visibleLayers = Math.max(1, Math.ceil(LAYERS.length * (1 - decayPhase)));
+
+  LAYERS.forEach((layer, li) => {
+    const traits = traitsByLayer[layer];
+    if (!traits || traits.length === 0) return;
+
+    const idx = Math.floor(frameCount * 0.05 + li * 5) % traits.length;
+    const img = images[traits[idx].key];
+    if (!img) return;
+
+    if (li < visibleLayers) {
+      ctx.globalAlpha = 1 - (li >= visibleLayers - 1 ? decayPhase % 1 * 0.8 : 0);
+      ctx.drawImage(img, 0, 0, 480, 480);
+    } else {
+      // Ghost trace — very faint, shifted
+      ctx.globalAlpha = 0.05;
+      const drift = (li - visibleLayers) * 10;
+      ctx.drawImage(img, drift, drift, 480, 480);
+    }
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ── MODE: CHAOS ──
+// Everything everywhere — random layers, random positions, rapid cycling
+function renderChaos(ctx, images) {
+  const allKeys = Object.keys(images);
+  const count = 5 + Math.floor(Math.sin(frameCount * 0.1) * 3);
+
+  for (let i = 0; i < count; i++) {
+    const seed = pseudoRandom(frameCount * 13 + i * 97);
+    const key = allKeys[Math.floor(seed * allKeys.length)];
+    const img = images[key];
+    if (!img) continue;
+
+    const x = (pseudoRandom(frameCount * 7 + i * 31) - 0.5) * 100;
+    const y = (pseudoRandom(frameCount * 11 + i * 53) - 0.5) * 100;
+    const scale = 0.5 + pseudoRandom(frameCount * 3 + i * 71) * 1.5;
+    const w = 480 * scale;
+    const h = 480 * scale;
+
+    ctx.globalAlpha = 0.2 + pseudoRandom(frameCount + i * 17) * 0.6;
+    ctx.globalCompositeOperation = i % 3 === 0 ? 'lighter' : i % 3 === 1 ? 'multiply' : 'source-over';
+    ctx.drawImage(img, x - (w - 480) / 2, y - (h - 480) / 2, w, h);
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
+// ── MODE: OVERLOAD ──
+// Rapid fire — every trait flashing one per frame, full screen
+function renderOverload(ctx, images) {
+  const allKeys = Object.keys(images);
+
+  // Flash 3 traits per frame at full intensity
+  for (let i = 0; i < 3; i++) {
+    const idx = (frameCount * 3 + i) % allKeys.length;
+    const img = images[allKeys[idx]];
+    if (!img) continue;
+
+    ctx.globalAlpha = i === 0 ? 1 : 0.4;
+    ctx.drawImage(img, 0, 0, 480, 480);
+  }
+
+  // Inversion flash
+  if (frameCount % 11 < 3) {
+    ctx.globalCompositeOperation = 'difference';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 480, 480);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+// ── MODE: MEMORY ──
+// Slow, haunting — one specimen fades in from the original 30, then dissolves
+function renderMemory(ctx, images) {
+  const cycleLength = 90; // frames per memory
+  const progress = (frameCount % cycleLength) / cycleLength;
+  const specIdx = Math.floor(frameCount / cycleLength) % SPECIMEN_DATA.length;
+
+  // Draw the remembered specimen
+  const specImg = new Image();
+  specImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[specIdx].svg;
+
+  // Fade in then out
+  let alpha;
+  if (progress < 0.3) {
+    alpha = progress / 0.3;
+  } else if (progress > 0.7) {
+    alpha = (1 - progress) / 0.3;
+  } else {
+    alpha = 1;
+  }
+
+  ctx.globalAlpha = alpha * 0.6;
+  ctx.drawImage(specImg, 0, 0, 480, 480);
+
+  // Corruption creeping in
+  if (progress > 0.4) {
+    const corruptAmount = (progress - 0.4) / 0.6;
+    const traits = traitsByLayer['background'];
+    if (traits && traits.length > 0) {
+      const cIdx = (specIdx + Math.floor(corruptAmount * 5)) % traits.length;
+      const cImg = images[traits[cIdx].key];
+      if (cImg) {
+        ctx.globalAlpha = corruptAmount * 0.4;
+        ctx.globalCompositeOperation = 'difference';
+        ctx.drawImage(cImg, 0, 0, 480, 480);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    }
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+// ═══════════════════════════════════════
+// META DISPLAY
+// ═══════════════════════════════════════
+function updateMeta(mode) {
+  const meta = document.getElementById('theOneMeta');
+  const layerNames = {
+    background: 'Palette', body: 'Bones', eyes: 'Sight',
+    hoodie: 'Cloak', neck: 'Relic', mouth: 'Artifact', head: 'Crown'
+  };
+
+  let html = '<div style="margin-bottom:12px;color:#444;letter-spacing:3px;">CONSUMED TRAITS:</div>';
+  LAYERS.forEach(layer => {
+    const traits = traitsByLayer[layer];
+    if (!traits) return;
+    const count = traits.length;
+    html += `<div class="trait-consumed">${layerNames[layer] || layer}: ALL ${count} (dissolved)</div>`;
+  });
+
+  html += '<div style="margin-top:16px;color:#333;letter-spacing:3px;">WHAT REMAINS:</div>';
+  html += '<div style="color:#444;margin:4px 0;">One token. All data. No form.</div>';
+
+  meta.innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pseudoRandom(seed) {
+  const x = Math.sin(seed * 127.1) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function skipToOne() {
+  resetAll();
+  document.body.classList.add('void');
+  document.getElementById('heroSection').style.display = 'none';
+  document.getElementById('mintSection').style.display = 'none';
+  document.getElementById('gridSection').style.display = 'none';
+  document.getElementById('theOneContainer').classList.add('active');
+  document.getElementById('phaseLabel').textContent = 'The One';
+  document.getElementById('phaseTimer').textContent = '#0';
+  document.getElementById('phaseTimer').classList.remove('urgent');
+  phase = 'ONE';
+  startOneOfOneRenderer();
+}
+
+function resetAll() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  phase = 'COUNTDOWN';
+  frameCount = 0;
+
+  document.body.classList.remove('dying','void');
+  document.getElementById('heroSection').style.display = '';
+  document.getElementById('mintSection').style.display = '';
+  document.getElementById('gridSection').style.display = '';
+  document.getElementById('theOneContainer').classList.remove('active');
+  document.getElementById('phaseLabel').textContent = 'Mint Opens In';
+  document.getElementById('phaseTimer').textContent = '03:00:00';
+  document.getElementById('phaseTimer').classList.remove('urgent');
+  document.getElementById('supplyNum').textContent = '4,999';
+  document.getElementById('destructionBar').style.width = '0';
+  document.getElementById('destructionBar').style.background = 'var(--red)';
+
+  // Reset grid cells
+  document.querySelectorAll('.specimen-cell').forEach((cell, i) => {
+    cell.classList.remove('glitching','dying');
+    cell.style = '';
+    if (SPECIMEN_DATA[i]) {
+      cell.querySelector('img').src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[i].svg;
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+init();
+</script>
+</body>
+</html>
