@@ -505,7 +505,40 @@ nav {
   padding: 100px 24px 120px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 40px;
   position: relative;
+}
+
+.shuffle-box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid var(--gold-pale);
+  background: white;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.shuffle-box::before, .shuffle-box::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.55;
+}
+.shuffle-box::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.shuffle-box::after { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+.shuffle-box img {
+  width: 160px;
+  height: 160px;
+  image-rendering: pixelated;
+  -webkit-image-rendering: pixelated;
+  transition: opacity 0.4s ease;
 }
 
 .mint-frame {
@@ -877,6 +910,7 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
   .hero-specimens { gap: 8px; }
   .hero-specimen { width: 56px; height: 56px; }
   .mint-card { padding: 40px 28px; }
+  .shuffle-box { display: none; }
   .rarity-grid { grid-template-columns: 1fr; }
   .specimen { width: 80px; height: 80px; }
 }
@@ -906,7 +940,7 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
   <p class="hero-italic">A Fully On-Chain Collection by a.c.k.</p>
   <div class="hero-rule"></div>
   <p class="hero-desc">
-    56 hand-made traits, rendered and compressed down to fine art pixel with code.
+    56 traits, rendered and compressed to pixel art on-chain.
     4,999 unique compositions stored entirely on the Ethereum blockchain. No servers. No IPFS.
   </p>
   <div class="hero-meta">
@@ -968,7 +1002,7 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
     <div class="orn-line"></div>
   </div>
   <div class="about-text">
-    <p>56 hand-drawn traits &mdash; backgrounds, bodies, crowns, cloaks, relics &mdash;
+    <p>56 traits &mdash; palettes, bones, crowns, cloaks, relics &mdash;
     stored as contract bytecode and composed into <em>unique works</em> at the moment of query.
     Nothing hosted. Nothing that can disappear.</p>
     <p>Each piece is a 24&times;24 pixel composition rendered as SVG, living entirely
@@ -982,7 +1016,7 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
 <!-- ═══ PALETTE ═══ -->
 <section class="palette-section">
   <div class="palette-inner">
-    <div class="palette-heading">Thirty Realms, Sampled from the Art</div>
+    <div class="palette-heading">Thirty Palettes, Sampled from the Art</div>
     <div class="palette-row">
       <div class="palette-swatch" style="background:#ab3662"><span class="palette-swatch-label">Candy</span></div>
       <div class="palette-swatch" style="background:#dfb747"><span class="palette-swatch-label">Sunstone</span></div>
@@ -1013,12 +1047,13 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
       <div class="palette-swatch" style="background:#98d52e"><span class="palette-swatch-label">Toxic Prism</span></div>
       <div class="palette-swatch" style="background:#be8c25"><span class="palette-swatch-label">Nuclear Dawn</span></div>
     </div>
-    <div class="palette-caption">Color Palette &mdash; 30 Realms Sampled from On-Chain Art</div>
+    <div class="palette-caption">30 Palettes Sampled from On-Chain Art</div>
   </div>
 </section>
 
 <!-- ═══ MINT ═══ -->
 <section class="mint-section" id="mint">
+  <div class="shuffle-box" id="shuffleLeft"><img id="shuffleImgLeft" src="" alt="Argonaut"></div>
   <div class="mint-frame">
     <div class="section-num">II.</div>
     <h2 class="section-heading">Claim</h2>
@@ -1050,6 +1085,7 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
       <div class="mint-status" id="mintStatus"></div>
     </div>
   </div>
+  <div class="shuffle-box" id="shuffleRight"><img id="shuffleImgRight" src="" alt="Argonaut"></div>
 </section>
 
 <div class="divider-gold"></div>
@@ -1101,12 +1137,12 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
     </div>
     <div class="catalog-grid">
       <div class="catalog-item">
-        <div class="catalog-layer">Realm</div>
+        <div class="catalog-layer">Palette</div>
         <div class="catalog-count">30 backgrounds</div>
         <div class="catalog-list">Candy, Sunstone, Slate, Aegean Blue, Blush, Ancient, Ice Prism, and 23 more</div>
       </div>
       <div class="catalog-item">
-        <div class="catalog-layer">Form</div>
+        <div class="catalog-layer">Bones</div>
         <div class="catalog-count">9 bodies + 2 special</div>
         <div class="catalog-list">Bone, Silver, Gold, Coral, Petrified, Prehistoric, Floral, Alien, Radioactive</div>
       </div>
@@ -1344,9 +1380,47 @@ document.querySelectorAll('nav a').forEach(a => {
   }
 });
 
+// ═══ SHUFFLE BOXES ═══
+function startShuffleBoxes() {
+  if (typeof SPECIMEN_DATA === 'undefined' || !SPECIMEN_DATA.length) return;
+  const leftImg = document.getElementById('shuffleImgLeft');
+  const rightImg = document.getElementById('shuffleImgRight');
+  if (!leftImg || !rightImg) return;
+
+  function randomSpecimen(exclude) {
+    let idx;
+    do { idx = Math.floor(Math.random() * SPECIMEN_DATA.length); } while (idx === exclude && SPECIMEN_DATA.length > 1);
+    return idx;
+  }
+
+  let leftIdx = randomSpecimen(-1);
+  let rightIdx = randomSpecimen(leftIdx);
+  leftImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[leftIdx].svg;
+  rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
+
+  setInterval(() => {
+    leftImg.style.opacity = '0';
+    setTimeout(() => {
+      leftIdx = randomSpecimen(rightIdx);
+      leftImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[leftIdx].svg;
+      leftImg.style.opacity = '1';
+    }, 400);
+  }, 2500);
+
+  setInterval(() => {
+    rightImg.style.opacity = '0';
+    setTimeout(() => {
+      rightIdx = randomSpecimen(leftIdx);
+      rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
+      rightImg.style.opacity = '1';
+    }, 400);
+  }, 3200);
+}
+
 // ═══ INIT ═══
 updateMintCount();
 loadSpecimens();
+startShuffleBoxes();
 </script>
 </body>
 </html>
