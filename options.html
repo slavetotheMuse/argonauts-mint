@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argonauts — Choose Your Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#1a1a18; --ink-faint:#8a8778; --gold:#dfb747; --gold-pale:#e8d9a0;
+  --parchment:#f5f0e3; --parchment-deep:#e8e0cc; --void:#0a0a0a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Playfair Display', serif;
+  background:var(--parchment);
+  color:var(--ink);
+  overflow-x:hidden;
+}
+
+/* ═══ PATH SELECTOR ═══ */
+.path-selector {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(245,240,227,0.95);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--parchment-deep);
+  display:flex; justify-content:center; gap:0;
+}
+.path-tab {
+  padding:18px 32px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; font-weight:400;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink-faint);
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all 0.3s;
+}
+.path-tab:hover { color:var(--ink); }
+.path-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+/* ═══ PATH PANELS ═══ */
+.path-panel { display:none; padding-top:60px; min-height:100vh; }
+.path-panel.active { display:block; }
+
+/* ═══ SHARED STYLES ═══ */
+.section { padding:80px 24px; text-align:center; }
+.section h1 {
+  font-size:2.8em; font-weight:700; letter-spacing:6px;
+  text-transform:uppercase; margin-bottom:12px;
+}
+.section h2 {
+  font-size:1.6em; font-weight:700; letter-spacing:3px;
+  margin-bottom:8px;
+}
+.section .subtitle {
+  font-style:italic; color:var(--ink-faint); font-size:1em;
+  margin-bottom:40px; max-width:600px; margin-left:auto; margin-right:auto;
+}
+.section .label {
+  font-family:'JetBrains Mono', monospace; font-size:10px;
+  letter-spacing:4px; text-transform:uppercase; color:var(--ink-faint);
+  margin-bottom:4px;
+}
+.grid {
+  display:grid; gap:6px; max-width:900px; margin:0 auto;
+}
+.grid img {
+  width:100%; height:100%; display:block; object-fit:contain;
+  image-rendering:pixelated; -webkit-image-rendering:pixelated;
+  image-rendering:crisp-edges;
+}
+.gold-divider {
+  height:1px; background:linear-gradient(90deg,transparent,var(--gold-pale),transparent);
+  margin:0 auto; max-width:600px;
+}
+.mint-card-demo {
+  background:white; border:1px solid var(--gold-pale); padding:48px 40px;
+  max-width:400px; margin:0 auto; position:relative;
+  box-shadow:0 2px 24px rgba(0,0,0,0.04);
+}
+.mint-card-demo::before, .mint-card-demo::after {
+  content:''; position:absolute; width:24px; height:24px;
+  border-color:var(--gold); border-style:solid; opacity:0.55;
+}
+.mint-card-demo::before { top:8px; left:8px; border-width:2px 0 0 2px; }
+.mint-card-demo::after { bottom:8px; right:8px; border-width:0 2px 2px 0; }
+.btn-demo {
+  font-family:'JetBrains Mono', monospace; font-size:11px;
+  letter-spacing:3px; text-transform:uppercase; padding:14px 32px;
+  background:var(--ink); color:var(--parchment); border:none; cursor:pointer;
+  transition:all 0.3s;
+}
+.btn-demo:hover { background:var(--gold); color:var(--ink); }
+
+/* ═══ OPTION A: PFP MINT ═══ */
+.pfp-hero { padding:100px 24px 60px; text-align:center; }
+.pfp-hero .hero-grid {
+  display:flex; justify-content:center; gap:8px; margin:40px 0;
+}
+.pfp-hero .hero-grid img { width:72px; height:72px; border:1px solid var(--gold-pale); }
+.pfp-stats {
+  display:flex; justify-content:center; gap:48px; margin:30px 0;
+}
+.pfp-stats .stat { text-align:center; }
+.pfp-stats .stat-num {
+  font-family:'JetBrains Mono', monospace; font-size:28px; color:var(--gold);
+}
+.pfp-stats .stat-label {
+  font-family:'JetBrains Mono', monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink-faint);
+}
+.pfp-claim { display:flex; justify-content:center; align-items:center; gap:40px; padding:80px 24px; }
+.pfp-shuffle {
+  width:180px; height:180px; overflow:hidden; flex-shrink:0;
+}
+.pfp-shuffle img { width:100%; height:100%; image-rendering:pixelated; }
+
+/* ═══ OPTION B: SELF DESTRUCT ═══ */
+#pathB { background:var(--void); color:#e0ddd0; }
+#pathB .path-phase { padding:80px 24px; text-align:center; }
+#pathB h1 { color:#e0ddd0; }
+#pathB h2 { color:#e0ddd0; }
+#pathB .subtitle { color:#888; }
+#pathB .label { color:#666; }
+.phase-indicator {
+  display:flex; justify-content:center; gap:0; margin:40px auto; max-width:700px;
+}
+.phase-dot {
+  flex:1; text-align:center; position:relative; padding:20px 0;
+}
+.phase-dot::before {
+  content:''; display:block; width:12px; height:12px; border-radius:50%;
+  background:#333; border:1px solid #555; margin:0 auto 8px;
+}
+.phase-dot.active::before { background:var(--gold); border-color:var(--gold); }
+.phase-dot.done::before { background:#666; border-color:#888; }
+.phase-dot .phase-name {
+  font-family:'JetBrains Mono', monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:#666;
+}
+.phase-dot.active .phase-name { color:var(--gold); }
+.phase-line {
+  position:absolute; top:25px; left:50%; width:100%; height:1px; background:#333;
+}
+.countdown {
+  font-family:'JetBrains Mono', monospace; font-size:3em;
+  color:var(--gold); margin:20px 0;
+}
+.countdown-label {
+  font-family:'JetBrains Mono', monospace; font-size:10px;
+  letter-spacing:4px; text-transform:uppercase; color:#666;
+}
+.destruct-grid {
+  display:grid; grid-template-columns:repeat(6,1fr); gap:4px;
+  max-width:600px; margin:40px auto;
+}
+.destruct-grid img {
+  width:100%; aspect-ratio:1; object-fit:contain;
+  image-rendering:pixelated; display:block;
+}
+.destruct-grid.maxpain img { filter:saturate(0.3) brightness(0.8); }
+.destruct-grid.void img { opacity:0.08; filter:saturate(0) brightness(0.3); }
+.void-text {
+  font-family:'JetBrains Mono', monospace; font-size:11px;
+  letter-spacing:6px; text-transform:uppercase; color:#333;
+  margin-top:40px;
+}
+#pathB .btn-demo { background:#222; color:#888; border:1px solid #333; }
+#pathB .btn-demo:hover { background:var(--gold); color:var(--void); border-color:var(--gold); }
+#pathB .btn-demo.danger { border-color:#661111; color:#aa3333; }
+#pathB .btn-demo.danger:hover { background:#aa3333; color:white; border-color:#aa3333; }
+
+/* Phase sim buttons */
+.phase-controls {
+  display:flex; justify-content:center; gap:12px; margin:30px 0;
+}
+
+/* ═══ OPTION C: 1-OF-1 ═══ */
+.oneof-hero { padding:100px 24px 40px; text-align:center; }
+.oneof-hero h1 { font-size:2em; letter-spacing:8px; }
+.oneof-modes {
+  display:flex; justify-content:center; gap:0; margin:40px 0;
+  border:1px solid var(--parchment-deep);
+  max-width:500px; margin-left:auto; margin-right:auto;
+}
+.oneof-mode {
+  flex:1; padding:14px 20px; cursor:pointer;
+  font-family:'JetBrains Mono', monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink-faint);
+  border-right:1px solid var(--parchment-deep);
+  transition:all 0.3s;
+}
+.oneof-mode:last-child { border-right:none; }
+.oneof-mode:hover { color:var(--ink); }
+.oneof-mode.active { background:var(--ink); color:var(--parchment); }
+
+.oneof-panel { display:none; padding:40px 24px; }
+.oneof-panel.active { display:block; }
+
+/* Generator mode */
+.oneof-preview {
+  width:320px; height:320px; margin:0 auto 30px;
+  border:1px solid var(--gold-pale); position:relative;
+  box-shadow:0 2px 24px rgba(0,0,0,0.04);
+}
+.oneof-preview img { width:100%; height:100%; image-rendering:pixelated; display:block; }
+
+/* Exhibition mode */
+.exhibition-wall {
+  background:#111; padding:60px 40px; min-height:500px;
+}
+.exhibition-grid {
+  display:grid; grid-template-columns:repeat(5,1fr); gap:20px;
+  max-width:900px; margin:0 auto;
+}
+.exhibition-frame {
+  background:#1a1a1a; padding:8px; border:1px solid #222;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+.exhibition-frame img {
+  width:100%; aspect-ratio:1; object-fit:contain;
+  image-rendering:pixelated; display:block;
+}
+
+/* Batch mode */
+.oneof-batch-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:6px;
+  max-width:720px; margin:30px auto;
+}
+.oneof-batch-grid img {
+  width:100%; aspect-ratio:1; object-fit:contain;
+  image-rendering:pixelated; display:block;
+  border:1px solid var(--parchment-deep);
+}
+
+/* Tag line */
+.concept-tag {
+  font-family:'JetBrains Mono', monospace; font-size:10px;
+  letter-spacing:4px; text-transform:uppercase; color:var(--ink-faint);
+  margin:20px 0 40px;
+}
+
+@media (max-width:768px) {
+  .path-tab { padding:14px 16px; font-size:9px; letter-spacing:2px; }
+  .section h1 { font-size:1.8em; }
+  .exhibition-grid { grid-template-columns:repeat(3,1fr); }
+  .destruct-grid { grid-template-columns:repeat(4,1fr); }
+  .pfp-claim { flex-direction:column; }
+  .pfp-shuffle { width:120px; height:120px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TAB SELECTOR ═══ -->
+<div class="path-selector">
+  <div class="path-tab active" onclick="showPath('A')">A &mdash; PFP Mint</div>
+  <div class="path-tab" onclick="showPath('B')">B &mdash; Self Destruct</div>
+  <div class="path-tab" onclick="showPath('C')">C &mdash; 1 of 1</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- OPTION A: FULL PFP MINT -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="pathA" class="path-panel active">
+
+  <div class="pfp-hero">
+    <h1>Argonauts</h1>
+    <div class="subtitle">5,000 skeletal voyagers forged in the fires of Colchis. Fully on-chain.</div>
+    <div class="hero-grid" id="heroGridA"></div>
+    <div class="pfp-stats">
+      <div class="stat"><div class="stat-num">4,999</div><div class="stat-label">Supply</div></div>
+      <div class="stat"><div class="stat-num">56</div><div class="stat-label">Traits</div></div>
+      <div class="stat"><div class="stat-num">22,680</div><div class="stat-label">Combinations</div></div>
+    </div>
+  </div>
+
+  <div class="gold-divider"></div>
+
+  <div class="section">
+    <h2>Specimens</h2>
+    <div class="subtitle">30 palettes sampled from the art</div>
+    <div class="grid" id="specimenGridA" style="grid-template-columns:repeat(6,1fr);"></div>
+  </div>
+
+  <div class="gold-divider"></div>
+
+  <div class="pfp-claim">
+    <div class="pfp-shuffle"><img id="shuffleA1" src=""></div>
+    <div class="mint-card-demo">
+      <div class="label">Price per Voyager</div>
+      <div style="font-size:2.2em;font-weight:700;margin:4px 0;">Free</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:3px;margin-bottom:24px;">GAS ONLY</div>
+      <button class="btn-demo">Connect Wallet</button>
+      <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-faint);">&mdash; / 4,999</div>
+    </div>
+    <div class="pfp-shuffle"><img id="shuffleA2" src=""></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- OPTION B: SELF DESTRUCT -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="pathB" class="path-panel">
+
+  <div class="path-phase" style="padding-top:100px;">
+    <div class="label" style="color:#666;">Performance Art by a.c.k.</div>
+    <h1 style="margin:12px 0;">Argonauts</h1>
+    <div class="subtitle">A fleeting on-chain existence</div>
+
+    <div class="phase-indicator">
+      <div class="phase-dot" id="phDormant"><div class="phase-line"></div><div class="phase-name">Dormant</div></div>
+      <div class="phase-dot active" id="phLive"><div class="phase-line"></div><div class="phase-name">Live</div></div>
+      <div class="phase-dot" id="phMaxPain"><div class="phase-line"></div><div class="phase-name">Max Pain</div></div>
+      <div class="phase-dot" id="phVoid"><div class="phase-name">Void</div></div>
+    </div>
+
+    <div class="phase-controls">
+      <button class="btn-demo" onclick="simPhase('live')">Simulate Live</button>
+      <button class="btn-demo" onclick="simPhase('maxpain')">Simulate Max Pain</button>
+      <button class="btn-demo danger" onclick="simPhase('void')">Simulate Void</button>
+    </div>
+  </div>
+
+  <!-- LIVE STATE -->
+  <div id="bLive" class="path-phase">
+    <div class="countdown" id="countdownTimer">2:59:47</div>
+    <div class="countdown-label">Until Destruction</div>
+    <div class="subtitle" style="margin-top:20px;">Soulbound. Non-transferable. 3 hours of life.</div>
+    <div class="destruct-grid" id="liveGrid"></div>
+  </div>
+
+  <!-- MAX PAIN STATE (hidden initially) -->
+  <div id="bMaxPain" class="path-phase" style="display:none;">
+    <h2 style="color:var(--gold);margin-bottom:8px;">Max Pain v3</h2>
+    <div class="subtitle">The Argonauts are dead. What remains is Max Pain.</div>
+    <div class="destruct-grid maxpain" id="maxpainGrid"></div>
+    <div style="margin-top:30px;">
+      <button class="btn-demo danger" onclick="simPhase('void')">Trigger Void</button>
+    </div>
+  </div>
+
+  <!-- VOID STATE (hidden initially) -->
+  <div id="bVoid" class="path-phase" style="display:none;">
+    <div class="void-text">All trait data erased from contract storage</div>
+    <div class="destruct-grid void" id="voidGrid"></div>
+    <div class="void-text" style="margin-top:40px;color:#222;">
+      tokenURI returns nothing<br><br>
+      The art existed at block 19,847,231<br>
+      It died at block 19,848,112<br><br>
+      <span style="color:#333;">That is the piece.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- OPTION C: 1-OF-1 CONCEPT PIECE -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="pathC" class="path-panel">
+
+  <div class="oneof-hero">
+    <div class="label">1 of 1 Concept Piece</div>
+    <h1>Argonauts</h1>
+    <div class="concept-tag">A generative art machine &mdash; 22,680 unique compositions on-chain</div>
+    <div class="subtitle">The buyer owns the system: the contract, the renderer, the generator, the exhibition. Not a single image &mdash; a living artwork.</div>
+  </div>
+
+  <div class="oneof-modes">
+    <div class="oneof-mode active" onclick="showOneofMode('generator')">Generator</div>
+    <div class="oneof-mode" onclick="showOneofMode('exhibition')">Exhibition</div>
+    <div class="oneof-mode" onclick="showOneofMode('batch')">Batch</div>
+  </div>
+
+  <!-- Generator Mode -->
+  <div id="oneofGenerator" class="oneof-panel active">
+    <div style="text-align:center;">
+      <div class="oneof-preview"><img id="oneofPreview" src=""></div>
+      <div style="display:flex;justify-content:center;gap:12px;">
+        <button class="btn-demo" onclick="randomOneof()">Render</button>
+        <button class="btn-demo" onclick="randomOneof()">Random</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exhibition Mode -->
+  <div id="oneofExhibition" class="oneof-panel">
+    <div class="exhibition-wall">
+      <div class="exhibition-grid" id="exhibitionGrid"></div>
+    </div>
+  </div>
+
+  <!-- Batch Mode -->
+  <div id="oneofBatch" class="oneof-panel" style="text-align:center;">
+    <h2>Batch Render</h2>
+    <div class="subtitle">Generate and preview multiple compositions at once</div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
+      <button class="btn-demo" onclick="batchOneof(6)">Render 6</button>
+      <button class="btn-demo" onclick="batchOneof(12)">Render 12</button>
+      <button class="btn-demo" onclick="batchOneof(24)">Render 24</button>
+    </div>
+    <div class="oneof-batch-grid" id="oneofBatchGrid"></div>
+  </div>
+
+</div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="specimen_data.js"></script>
+<script>
+// ── Helpers ──
+function svgSrc(b64) { return 'data:image/svg+xml;base64,' + b64; }
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ── Path switching ──
+function showPath(id) {
+  document.querySelectorAll('.path-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.path-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('path' + id).classList.add('active');
+  document.querySelectorAll('.path-tab')[{A:0,B:1,C:2}[id]].classList.add('active');
+}
+
+// ══════════════════════════════════════
+// OPTION A: PFP MINT
+// ══════════════════════════════════════
+function initPathA() {
+  if (!window.SPECIMEN_DATA || !SPECIMEN_DATA.length) return;
+
+  // Hero grid — 8 specimens
+  var hero = document.getElementById('heroGridA');
+  for (var i = 0; i < 8; i++) {
+    var img = document.createElement('img');
+    img.src = svgSrc(SPECIMEN_DATA[i].svg);
+    hero.appendChild(img);
+  }
+
+  // Specimen grid — all 30
+  var grid = document.getElementById('specimenGridA');
+  SPECIMEN_DATA.forEach(function(s) {
+    var img = document.createElement('img');
+    img.src = svgSrc(s.svg);
+    img.style.cssText = 'border:1px solid var(--parchment-deep);aspect-ratio:1;';
+    grid.appendChild(img);
+  });
+
+  // Shuffling boxes
+  var s1 = document.getElementById('shuffleA1');
+  var s2 = document.getElementById('shuffleA2');
+  s1.src = svgSrc(rand(SPECIMEN_DATA).svg);
+  s2.src = svgSrc(rand(SPECIMEN_DATA).svg);
+  setInterval(function() { s1.src = svgSrc(rand(SPECIMEN_DATA).svg); }, 2500);
+  setInterval(function() { s2.src = svgSrc(rand(SPECIMEN_DATA).svg); }, 3200);
+}
+
+// ══════════════════════════════════════
+// OPTION B: SELF DESTRUCT
+// ══════════════════════════════════════
+var bPhase = 'live';
+
+function initPathB() {
+  if (!window.SPECIMEN_DATA || !SPECIMEN_DATA.length) return;
+  fillDestructGrid('liveGrid', false);
+  fillDestructGrid('maxpainGrid', false);
+  fillDestructGrid('voidGrid', false);
+  startCountdown();
+}
+
+function fillDestructGrid(id, useMaxPain) {
+  var grid = document.getElementById(id);
+  grid.innerHTML = '';
+  // Show 18 specimens (3 per wallet * 6 wallets)
+  for (var i = 0; i < 18; i++) {
+    var img = document.createElement('img');
+    img.src = svgSrc(SPECIMEN_DATA[i % SPECIMEN_DATA.length].svg);
+    grid.appendChild(img);
+  }
+}
+
+function simPhase(phase) {
+  bPhase = phase;
+
+  // Update phase dots
+  document.querySelectorAll('.phase-dot').forEach(function(d) { d.className = 'phase-dot'; });
+  if (phase === 'live') {
+    document.getElementById('phLive').classList.add('active');
+    document.getElementById('phDormant').classList.add('done');
+  } else if (phase === 'maxpain') {
+    document.getElementById('phLive').classList.add('done');
+    document.getElementById('phDormant').classList.add('done');
+    document.getElementById('phMaxPain').classList.add('active');
+  } else if (phase === 'void') {
+    document.getElementById('phLive').classList.add('done');
+    document.getElementById('phDormant').classList.add('done');
+    document.getElementById('phMaxPain').classList.add('done');
+    document.getElementById('phVoid').classList.add('active');
+  }
+
+  // Show/hide sections
+  document.getElementById('bLive').style.display = phase === 'live' ? 'block' : 'none';
+  document.getElementById('bMaxPain').style.display = phase === 'maxpain' ? 'block' : 'none';
+  document.getElementById('bVoid').style.display = phase === 'void' ? 'block' : 'none';
+}
+
+function startCountdown() {
+  var seconds = 3 * 60 * 60 - 13; // 2:59:47
+  var el = document.getElementById('countdownTimer');
+  setInterval(function() {
+    seconds--;
+    if (seconds < 0) seconds = 0;
+    var h = Math.floor(seconds / 3600);
+    var m = Math.floor((seconds % 3600) / 60);
+    var s = seconds % 60;
+    el.textContent = h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+}
+
+// ══════════════════════════════════════
+// OPTION C: 1-OF-1
+// ══════════════════════════════════════
+function initPathC() {
+  if (!window.SPECIMEN_DATA || !SPECIMEN_DATA.length) return;
+  randomOneof();
+  fillExhibition();
+  batchOneof(12);
+}
+
+function showOneofMode(mode) {
+  document.querySelectorAll('.oneof-mode').forEach(function(m) { m.classList.remove('active'); });
+  document.querySelectorAll('.oneof-panel').forEach(function(p) { p.classList.remove('active'); });
+
+  if (mode === 'generator') {
+    document.querySelectorAll('.oneof-mode')[0].classList.add('active');
+    document.getElementById('oneofGenerator').classList.add('active');
+  } else if (mode === 'exhibition') {
+    document.querySelectorAll('.oneof-mode')[1].classList.add('active');
+    document.getElementById('oneofExhibition').classList.add('active');
+  } else {
+    document.querySelectorAll('.oneof-mode')[2].classList.add('active');
+    document.getElementById('oneofBatch').classList.add('active');
+  }
+}
+
+function randomOneof() {
+  document.getElementById('oneofPreview').src = svgSrc(rand(SPECIMEN_DATA).svg);
+}
+
+function fillExhibition() {
+  var grid = document.getElementById('exhibitionGrid');
+  grid.innerHTML = '';
+  // 10 framed pieces
+  for (var i = 0; i < 10; i++) {
+    var frame = document.createElement('div');
+    frame.className = 'exhibition-frame';
+    var img = document.createElement('img');
+    img.src = svgSrc(SPECIMEN_DATA[i % SPECIMEN_DATA.length].svg);
+    frame.appendChild(img);
+    grid.appendChild(frame);
+  }
+  // Slowly cycle
+  setInterval(function() {
+    var frames = grid.querySelectorAll('img');
+    var idx = Math.floor(Math.random() * frames.length);
+    frames[idx].src = svgSrc(rand(SPECIMEN_DATA).svg);
+  }, 3000);
+}
+
+function batchOneof(count) {
+  var grid = document.getElementById('oneofBatchGrid');
+  grid.innerHTML = '';
+  var cols = count <= 6 ? 3 : count <= 12 ? 4 : 6;
+  grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+  for (var i = 0; i < count; i++) {
+    var img = document.createElement('img');
+    img.src = svgSrc(rand(SPECIMEN_DATA).svg);
+    grid.appendChild(img);
+  }
+}
+
+// ── Init all ──
+initPathA();
+initPathB();
+initPathC();
+</script>
+</body>
+</html>
