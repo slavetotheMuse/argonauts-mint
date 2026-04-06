@@ -357,33 +357,31 @@ nav {
 
 .crew-grid {
   display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
-  gap:14px;
+  grid-template-columns:repeat(4, 1fr);
+  gap:8px;
+  max-width:720px;
+  margin:0 auto;
 }
 
 .crew-item {
+  aspect-ratio:1;
   border:1px solid var(--parchment-deep);
-  padding:6px;
+  padding:0;
   background:rgba(255,255,255,0.35);
-  text-align:center;
   cursor:pointer;
   transition:all 0.3s;
+  overflow:hidden;
 }
 .crew-item:hover {
   border-color:var(--gold);
   box-shadow:0 0 20px rgba(223,183,71,0.08);
 }
 .crew-item img {
-  width:100%; height:auto;
+  width:100%; height:100%;
   display:block;
-  margin-bottom:6px;
+  object-fit:contain;
   image-rendering:pixelated;
   -webkit-image-rendering:pixelated;
-}
-.crew-item-label {
-  font-family:'JetBrains Mono', monospace;
-  font-size:0.68em;
-  color:var(--ink-faint);
 }
 
 /* ═══ BATCH RENDER MODE ═══ */
@@ -418,33 +416,32 @@ nav {
 }
 .batch-grid {
   display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-  gap:14px;
+  gap:8px;
+  max-width:900px;
+  margin:0 auto;
 }
+.batch-grid.cols-6  { grid-template-columns:repeat(3, 1fr); max-width:540px; }
+.batch-grid.cols-12 { grid-template-columns:repeat(4, 1fr); max-width:720px; }
+.batch-grid.cols-24 { grid-template-columns:repeat(6, 1fr); max-width:900px; }
 .batch-item {
+  aspect-ratio:1;
   border:1px solid var(--parchment-deep);
-  padding:6px;
+  padding:0;
   background:rgba(255,255,255,0.35);
-  text-align:center;
   cursor:pointer;
   transition:all 0.3s;
+  overflow:hidden;
 }
 .batch-item:hover {
   border-color:var(--gold);
   box-shadow:0 0 20px rgba(223,183,71,0.08);
 }
 .batch-item img {
-  width:100%; height:auto;
+  width:100%; height:100%;
   display:block;
-  margin-bottom:6px;
+  object-fit:contain;
   image-rendering:pixelated;
   -webkit-image-rendering:pixelated;
-}
-.batch-item-meta {
-  font-family:'JetBrains Mono', monospace;
-  font-size:0.65em;
-  color:var(--ink-faint);
-  line-height:1.5;
 }
 .batch-download-all {
   margin-top:20px;
@@ -464,7 +461,10 @@ nav {
   .gen-btn { width:100%; }
   .trait-thumbs { grid-template-columns:repeat(auto-fill, minmax(56px, 1fr)); }
   #previewImg { width:260px; height:260px; }
-  .crew-grid { grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); }
+  .crew-grid { grid-template-columns:repeat(3, 1fr); }
+  .batch-grid.cols-6  { grid-template-columns:repeat(2, 1fr); }
+  .batch-grid.cols-12 { grid-template-columns:repeat(3, 1fr); }
+  .batch-grid.cols-24 { grid-template-columns:repeat(4, 1fr); }
 }
 </style>
 </head>
@@ -1129,12 +1129,7 @@ function generateCrew(){
     var img = document.createElement('img');
     img.src = svgToDataUri(buildSVG(ts));
 
-    var label = document.createElement('div');
-    label.className = 'crew-item-label';
-    label.textContent = crewNames[i % crewNames.length];
-
     item.appendChild(img);
-    item.appendChild(label);
     item.onclick = (function(t){ return function(){
       currentTraits = t;
       showGeneratorMode();
@@ -1152,6 +1147,7 @@ var batchEntries = [];
 function batchRender(count){
   var grid = document.getElementById('batchGrid');
   grid.innerHTML = '';
+  grid.className = 'batch-grid cols-' + count;
   batchEntries = [];
   var savedTraits = Object.assign({}, currentTraits);
   document.getElementById('batchDownloadAll').style.display = 'none';
@@ -1173,17 +1169,7 @@ function batchRender(count){
     img.src = svgToDataUri(buildSVG(ts));
     batchEntries.push({ traits:ts });
 
-    var friendly = function(f){
-      if(f==='none') return '\u2014';
-      return f.replace('.png','').replace(/_/g,' ').substring(0,14);
-    };
-
-    var meta = document.createElement('div');
-    meta.className = 'batch-item-meta';
-    meta.innerHTML = friendly(ts.body) + ' / ' + friendly(ts.background);
-
     item.appendChild(img);
-    item.appendChild(meta);
     item.onclick = (function(t){ return function(){
       currentTraits = t;
       showGeneratorMode();
