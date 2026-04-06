@@ -562,23 +562,31 @@ function renderLoop(ctx, images) {
 
 // ── MODE: GLITCH ──
 // Each layer offset by random pixels, wrong layers in wrong positions
+// Accumulated glitch time — advances at variable speed
+let glitchTime = 0;
+
 function renderGlitch(ctx, images) {
+  // Breathing speed: fast most of the time, slows down every ~6 seconds
+  const breath = Math.sin(frameCount * 0.017); // ~6s cycle
+  // -1 to 1 → when breath dips below -0.5, slow down
+  const speed = breath < -0.5 ? 0.12 : 1.0;
+  glitchTime += speed;
+
   LAYERS.forEach((layer, li) => {
     const traits = traitsByLayer[layer];
     if (!traits || traits.length === 0) return;
 
-    // Original fast trait cycling
-    const idx = (frameCount + li * 7) % traits.length;
+    const idx = Math.floor(glitchTime + li * 7) % traits.length;
     const img = images[traits[idx].key];
     if (!img) return;
 
     // No wobble — layers drawn at origin
-    ctx.globalAlpha = 0.7 + Math.sin(frameCount * 0.2 + li) * 0.3;
+    ctx.globalAlpha = 0.7 + Math.sin(glitchTime * 0.2 + li) * 0.3;
     ctx.drawImage(img, 0, 0, 480, 480);
   });
 
-  // RGB split artifact — original speed
-  if (frameCount % 7 < 2) {
+  // RGB split artifact — only during fast phases
+  if (speed > 0.5 && frameCount % 7 < 2) {
     ctx.globalCompositeOperation = 'screen';
     ctx.globalAlpha = 0.3;
     const shift = Math.random() * 20 - 10;
