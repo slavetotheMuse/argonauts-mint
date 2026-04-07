@@ -569,9 +569,11 @@ let frozenAt = 0;
 let unfreezeTimeout = null;
 
 function renderGlitch(ctx, images) {
-  // Steady 0.12 baseline, occasional crawl to 0.04
-  const breath = Math.sin(frameCount * 0.017); // ~6s cycle
-  const speed = breath < -0.5 ? 0.04 : 0.12;
+  // Slow breathing: oscillates smoothly between 0.12 (slow) and 1.0 (fast)
+  // ~18s full cycle so each phase lingers
+  const breath = Math.sin(frameCount * 0.0058);  // 0..1 after remap
+  const t = (breath + 1) / 2; // 0 to 1
+  const speed = 0.12 + t * 0.88; // 0.12 → 1.0
 
   // If frozen from click, hold glitchTime still
   if (!frozen) {
