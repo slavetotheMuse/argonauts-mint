@@ -643,10 +643,7 @@ function switchToExhibition() {
   document.getElementById('modeOne').classList.remove('active');
   document.getElementById('modeExhibition').classList.add('active');
 
-  // Slow down the glitch dramatically before fading
-  glitchOverrideSpeed = 0.04;
-
-  // Fade out the 1-of-1 frame
+  // CSS fade-out of the 1-of-1 frame (animation keeps running underneath)
   const oneContainer = document.getElementById('theOneContainer');
   oneContainer.classList.add('transitioning');
 
@@ -670,12 +667,10 @@ function switchToOne() {
   // Hide exhibition
   document.getElementById('exhibitionContainer').classList.remove('active');
 
-  // Show 1-of-1 frame, restore speed
+  // Show 1-of-1 frame
   const oneContainer = document.getElementById('theOneContainer');
   oneContainer.style.display = '';
   oneContainer.classList.remove('transitioning');
-
-  glitchOverrideSpeed = null;
 
   document.getElementById('phaseLabel').textContent = 'The One';
   document.getElementById('phaseTimer').textContent = '#0';
@@ -797,15 +792,13 @@ let glitchTime = 0;
 let frozen = false;
 let frozenAt = 0;
 let unfreezeTimeout = null;
-let glitchOverrideSpeed = null; // when set, forces a fixed speed (for transitions)
 
 function renderGlitch(ctx, images) {
   // Slow breathing: oscillates smoothly between 0.12 (slow) and 1.0 (fast)
   // ~18s full cycle so each phase lingers
   const breath = Math.sin(frameCount * 0.0058);  // 0..1 after remap
   const t = (breath + 1) / 2; // 0 to 1
-  let speed = 0.12 + t * 0.88; // 0.12 → 1.0
-  if (glitchOverrideSpeed !== null) speed = glitchOverrideSpeed;
+  const speed = 0.12 + t * 0.88; // 0.12 → 1.0
 
   // If frozen from click, hold glitchTime still
   if (!frozen) {
