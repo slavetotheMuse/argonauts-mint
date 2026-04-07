@@ -1370,12 +1370,28 @@ function showToast(t, m) {
 }
 
 // ═══ SMOOTH SCROLL ═══
+// Skip href="#" (the Generator link, which has its own onclick handler).
+// Also auto-close the Generator overlay if it's open, so users can navigate
+// away from the generator without hunting for the close button.
 document.querySelectorAll('nav a').forEach(a => {
   const href = a.getAttribute('href');
-  if (href && href.startsWith('#')) {
+  if (href && href.length > 1 && href.startsWith('#')) {
     a.addEventListener('click', e => {
       e.preventDefault();
-      document.querySelector(href)?.scrollIntoView({behavior:'smooth'});
+      // If the Generator overlay is open, close it before scrolling
+      const ov = document.getElementById('genOverlay');
+      if (ov && ov.classList.contains('show') && typeof window.closeGenerator === 'function') {
+        window.closeGenerator();
+      }
+      const target = document.querySelector(href);
+      if (target) {
+        // Use instant scroll fallback if smooth doesn't work in this browser
+        try {
+          target.scrollIntoView({behavior:'smooth', block:'start'});
+        } catch (_) {
+          window.scrollTo(0, target.offsetTop);
+        }
+      }
     });
   }
 });

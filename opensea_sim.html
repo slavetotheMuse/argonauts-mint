@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OpenSea Render Simulator — Argonauts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --os-bg:       #0d1114;
+    --os-panel:    #1b2126;
+    --os-panel-2:  #2a323a;
+    --os-border:   #2f3941;
+    --os-text:     #e7edf1;
+    --os-text-dim: #8c9aa6;
+    --os-accent:   #2081e2;
+    --os-green:    #34c77b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--os-bg);
+    color: var(--os-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  /* ─── Sim chrome ─── */
+  .sim-banner {
+    background: linear-gradient(90deg, #341f4a, #1f1f4a);
+    border-bottom: 1px solid #5a3d8a;
+    padding: 10px 24px;
+    font-size: 12px;
+    color: #c8b8ff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .sim-banner strong { color: #fff; }
+  .sim-banner .controls { display: flex; gap: 8px; align-items: center; }
+  .sim-banner button {
+    background: #5a3d8a;
+    color: #fff;
+    border: 1px solid #7b5bb5;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .sim-banner button:hover { background: #7b5bb5; }
+  .sim-banner label { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ─── Fake OpenSea header ─── */
+  .os-header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--os-bg);
+    border-bottom: 1px solid var(--os-border);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .os-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 18px;
+  }
+  .os-logo .dot {
+    width: 24px; height: 24px;
+    background: var(--os-accent);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .os-nav { display: flex; gap: 20px; color: var(--os-text-dim); font-size: 13px; }
+  .os-search {
+    flex: 1; max-width: 500px;
+    background: var(--os-panel);
+    border: 1px solid var(--os-border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--os-text-dim);
+    font-size: 13px;
+  }
+
+  /* ─── Collection header ─── */
+  .collection-hero {
+    padding: 24px;
+    border-bottom: 1px solid var(--os-border);
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .collection-avatar {
+    width: 104px; height: 104px;
+    border-radius: 16px;
+    border: 3px solid var(--os-bg);
+    background: #1a2025;
+    overflow: hidden;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .collection-avatar img { width: 100%; height: 100%; display: block; }
+  .collection-meta h1 { margin: 0 0 4px; font-size: 24px; font-weight: 700; }
+  .collection-meta .verified { color: var(--os-accent); font-size: 15px; margin-left: 4px; }
+  .collection-meta .stats {
+    display: flex; gap: 32px; margin-top: 12px;
+    color: var(--os-text-dim); font-size: 12px;
+  }
+  .collection-meta .stats strong { display: block; color: var(--os-text); font-size: 16px; }
+
+  /* ─── Section titles ─── */
+  .section-title {
+    padding: 24px 24px 12px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--os-text-dim);
+    border-top: 1px solid var(--os-border);
+  }
+  .section-title .hint {
+    text-transform: none; letter-spacing: 0;
+    color: #555f68; font-size: 12px; margin-left: 12px;
+  }
+
+  /* ─── Grid (collection page) ─── */
+  .os-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    padding: 12px 24px 24px;
+  }
+  .os-card {
+    background: var(--os-panel);
+    border: 1px solid var(--os-border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .os-card:hover {
+    transform: translateY(-2px);
+    border-color: #3a4650;
+  }
+  .os-card .thumb {
+    width: 100%; aspect-ratio: 1 / 1;
+    background: #0a0d10;
+    display: block;
+    overflow: hidden;
+  }
+  .os-card .thumb img,
+  .os-card .thumb canvas {
+    width: 100%; height: 100%; display: block;
+  }
+  .os-card .meta {
+    padding: 10px 12px;
+  }
+  .os-card .meta .name {
+    font-size: 13px; color: var(--os-text-dim);
+    margin-bottom: 2px;
+  }
+  .os-card .meta .id {
+    font-size: 15px; font-weight: 600;
+  }
+  .os-card .meta .price {
+    margin-top: 8px; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .os-card .meta .price::before {
+    content: "⬨"; color: var(--os-text-dim);
+  }
+
+  /* ─── Item detail page ─── */
+  .item-detail {
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 620px 1fr;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .item-image-frame {
+    background: var(--os-panel);
+    border: 1px solid var(--os-border);
+    border-radius: 16px;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+  .item-image-frame img,
+  .item-image-frame canvas {
+    width: 100%; height: 100%; display: block;
+  }
+  .item-side h1 { margin: 0 0 4px; font-size: 32px; }
+  .item-side .collection-link { color: var(--os-accent); font-size: 14px; margin-bottom: 16px; display: block; }
+  .item-side .price-card {
+    background: var(--os-panel);
+    border: 1px solid var(--os-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .item-side .price-card .label { color: var(--os-text-dim); font-size: 12px; }
+  .item-side .price-card .price { font-size: 30px; font-weight: 700; margin: 6px 0; }
+  .item-side .price-card .usd { color: var(--os-text-dim); font-size: 13px; }
+  .item-side .buy-btn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px;
+    background: var(--os-accent);
+    color: #fff;
+    border: 0;
+    border-radius: 10px;
+    font-size: 16px; font-weight: 600;
+    cursor: pointer;
+  }
+  .traits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 24px;
+  }
+  .trait-chip {
+    background: var(--os-panel);
+    border: 1px solid var(--os-border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .trait-chip .k { color: var(--os-text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .trait-chip .v { font-size: 13px; font-weight: 600; margin-top: 2px; }
+
+  /* ─── Tiny row (activity feed / wallet) ─── */
+  .activity-feed {
+    padding: 0 24px 32px;
+  }
+  .activity-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--os-border);
+  }
+  .activity-row .tiny {
+    width: 48px; height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0a0d10;
+    flex-shrink: 0;
+  }
+  .activity-row .tiny img,
+  .activity-row .tiny canvas { width: 100%; height: 100%; display: block; }
+  .activity-row .info { flex: 1; font-size: 13px; }
+  .activity-row .info .id { font-weight: 600; }
+  .activity-row .info .sub { color: var(--os-text-dim); font-size: 11px; }
+  .activity-row .act { color: var(--os-green); font-size: 12px; font-weight: 600; }
+  .activity-row .price { font-size: 13px; font-weight: 600; }
+
+  /* ─── Rendering mode toggles ─── */
+  .render-modes img,
+  .render-modes canvas {
+    image-rendering: pixelated !important;
+    image-rendering: crisp-edges !important;
+    -ms-interpolation-mode: nearest-neighbor !important;
+  }
+  .render-modes.smooth img,
+  .render-modes.smooth canvas {
+    image-rendering: auto !important;
+    -ms-interpolation-mode: bicubic !important;
+  }
+
+  .caption {
+    padding: 0 24px 8px;
+    color: var(--os-text-dim);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  @media (max-width: 900px) {
+    .item-detail { grid-template-columns: 1fr; }
+    .os-header { flex-wrap: wrap; }
+    .os-nav { order: 3; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sim-banner">
+  <div>
+    <strong>⚠ OpenSea Render Simulator</strong> — this is a local mock of how your Argonauts will appear on OpenSea at various UI sizes. Uses the exact same on-chain SVG pipeline.
+  </div>
+  <div class="controls">
+    <label><input type="checkbox" id="toggleSmooth"> Simulate soft rasterization</label>
+    <button id="btnRegen">↻ Regenerate</button>
+  </div>
+</div>
+
+<!-- Fake OpenSea top nav -->
+<div class="os-header">
+  <div class="os-logo"><span class="dot"></span> OpenSea</div>
+  <div class="os-nav"><span>Drops</span><span>Stats</span><span>Create</span></div>
+  <div class="os-search">🔍 Search Argonauts by name...</div>
+</div>
+
+<!-- Collection hero (with avatar) -->
+<div class="collection-hero">
+  <div class="collection-avatar render-modes" id="heroAvatarWrap">
+    <img id="heroAvatar" alt="avatar">
+  </div>
+  <div class="collection-meta">
+    <h1>Argonauts <span class="verified">✓</span></h1>
+    <div style="color: var(--os-text-dim); font-size: 13px;">By slavetothemuse · Created Apr 2026</div>
+    <div class="stats">
+      <div><strong>4,999</strong>items</div>
+      <div><strong>—</strong>owners</div>
+      <div><strong>0.02</strong>floor</div>
+      <div><strong>100%</strong>on-chain</div>
+    </div>
+  </div>
+</div>
+
+<!-- Collection grid -->
+<div class="section-title">
+  Collection grid <span class="hint">— thumbnails at ~260px (what most visitors see first)</span>
+</div>
+<div class="caption">Toggle "Simulate soft rasterization" in the top bar to see the difference between crisp (pixelated) and CDN-rasterized rendering.</div>
+<div class="os-grid render-modes" id="gridWrap"></div>
+
+<!-- Item detail page -->
+<div class="section-title">
+  Item detail page <span class="hint">— 620px preview (clicked-through view)</span>
+</div>
+<div class="item-detail">
+  <div class="item-image-frame render-modes" id="detailFrame">
+    <img id="detailImg" alt="">
+  </div>
+  <div class="item-side">
+    <a class="collection-link">Argonauts</a>
+    <h1>Argonaut #0</h1>
+    <div style="color: var(--os-text-dim); font-size: 13px;">Owned by <span style="color: #fff;">you.eth</span></div>
+    <div class="price-card">
+      <div class="label">Current price</div>
+      <div class="price">0.02 ETH</div>
+      <div class="usd">$65.42</div>
+      <button class="buy-btn">Buy now</button>
+    </div>
+    <div class="traits-grid" id="traitsGrid"></div>
+  </div>
+</div>
+
+<!-- Activity feed tiny thumbs -->
+<div class="section-title">
+  Activity feed <span class="hint">— 48px tiny thumbs (wallet rows, trade history)</span>
+</div>
+<div class="activity-feed render-modes" id="activityWrap"></div>
+
+<!-- Scripts: loaded in order -->
+<script src="trait_data_24.js"></script>
+<script src="generator_embed.js"></script>
+<script>
+  // ─── Wait until generator is ready, then populate everything ───
+  function waitForGen(cb){
+    if (typeof window.genRandomSVG === 'function') {
+      // openGenerator() triggers ensureInit which builds the overlay DOM + randomizes traits.
+      // We immediately close it — we only want the init side-effects.
+      try { window.openGenerator(); window.closeGenerator(); } catch(e){ console.warn('init warn', e); }
+      cb();
+    } else {
+      setTimeout(function(){ waitForGen(cb); }, 50);
+    }
+  }
+
+  // Mock trait labels for the detail page chips
+  var TRAIT_MOCK = [
+    ['Palette','PunkBlue'], ['Bones','Gold'], ['Sight','Shades'],
+    ['Cloak','Black'], ['Relic','Gold'], ['Artifact','Pipe']
+  ];
+
+  var GRID_COUNT = 24;
+
+  function populate() {
+    // Hero avatar
+    document.getElementById('heroAvatar').src = window.genRandomSVG();
+
+    // Collection grid: 24 cards
+    var grid = document.getElementById('gridWrap');
+    grid.innerHTML = '';
+    for (var i = 0; i < GRID_COUNT; i++) {
+      var card = document.createElement('div');
+      card.className = 'os-card';
+      card.innerHTML =
+        '<div class="thumb"><img alt=""></div>' +
+        '<div class="meta">' +
+          '<div class="name">Argonauts</div>' +
+          '<div class="id">#' + (i + 1) + '</div>' +
+          '<div class="price">' + (0.015 + (i % 7) * 0.008).toFixed(3) + '</div>' +
+        '</div>';
+      card.querySelector('img').src = window.genRandomSVG();
+      grid.appendChild(card);
+    }
+
+    // Detail page large preview
+    document.getElementById('detailImg').src = window.genRandomSVG();
+
+    // Trait chips
+    var tg = document.getElementById('traitsGrid');
+    tg.innerHTML = '';
+    TRAIT_MOCK.forEach(function(t){
+      var chip = document.createElement('div');
+      chip.className = 'trait-chip';
+      chip.innerHTML = '<div class="k">' + t[0] + '</div><div class="v">' + t[1] + '</div>';
+      tg.appendChild(chip);
+    });
+
+    // Activity feed tiny rows
+    var act = document.getElementById('activityWrap');
+    act.innerHTML = '';
+    var actions = ['Sale','Transfer','List','Mint','Sale'];
+    for (var j = 0; j < 5; j++) {
+      var row = document.createElement('div');
+      row.className = 'activity-row';
+      row.innerHTML =
+        '<div class="tiny"><img alt=""></div>' +
+        '<div class="info">' +
+          '<div class="id">Argonaut #' + (Math.floor(Math.random() * 4999) + 1) + '</div>' +
+          '<div class="sub">' + Math.floor(Math.random() * 60) + 'm ago</div>' +
+        '</div>' +
+        '<div class="act">' + actions[j] + '</div>' +
+        '<div class="price">' + (0.01 + Math.random() * 0.1).toFixed(3) + ' ETH</div>';
+      row.querySelector('img').src = window.genRandomSVG();
+      act.appendChild(row);
+    }
+  }
+
+  waitForGen(function(){
+    populate();
+
+    document.getElementById('btnRegen').addEventListener('click', populate);
+
+    // Smooth rasterization toggle: flips image-rendering on all .render-modes containers
+    var smoothToggle = document.getElementById('toggleSmooth');
+    var modeContainers = document.querySelectorAll('.render-modes');
+    smoothToggle.addEventListener('change', function(){
+      modeContainers.forEach(function(el){
+        if (smoothToggle.checked) el.classList.add('smooth');
+        else                       el.classList.remove('smooth');
+      });
+    });
+  });
+</script>
+</body>
+</html>
