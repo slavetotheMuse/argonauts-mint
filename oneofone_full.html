@@ -19,8 +19,9 @@ body {
   overflow-x:hidden;
   transition: background 3s ease;
 }
-body.dying { background:#1a1511; color:#8a8778; }
-body.void { background:var(--void); color:#222; }
+/* dying/void retain the parchment background — only the contents change */
+body.dying { background:var(--parchment); color:var(--ink); }
+body.void  { background:var(--parchment); color:var(--ink); }
 
 /* ═══ PHASE INDICATOR ═══ */
 .phase-bar {
@@ -32,8 +33,6 @@ body.void { background:var(--void); color:#222; }
   padding:14px 24px; gap:24px;
   transition: background 2s, border-color 2s;
 }
-body.dying .phase-bar { background:rgba(26,21,17,0.95); border-color:#2a2520; }
-body.void .phase-bar { background:rgba(10,10,10,0.95); border-color:#1a1a1a; }
 
 .phase-label {
   font-family:'JetBrains Mono', monospace;
@@ -41,8 +40,6 @@ body.void .phase-bar { background:rgba(10,10,10,0.95); border-color:#1a1a1a; }
   color:var(--ink-faint);
   transition: color 2s;
 }
-body.dying .phase-label { color:#5a5545; }
-body.void .phase-label { color:#222; }
 
 .phase-timer {
   font-family:'JetBrains Mono', monospace;
@@ -52,7 +49,6 @@ body.void .phase-label { color:#222; }
   transition: color 1s;
 }
 .phase-timer.urgent { color:var(--red); }
-body.void .phase-timer { color:#1a1a1a; }
 
 /* ═══ HERO ═══ */
 .hero {
@@ -66,7 +62,7 @@ body.void .phase-timer { color:#1a1a1a; }
   transition: all 2s;
 }
 body.dying .hero h1 { letter-spacing:20px; opacity:0.4; }
-body.void .hero h1 { opacity:0; }
+body.void  .hero h1 { opacity:0; }
 
 .hero .subtitle {
   font-family:'JetBrains Mono', monospace;
@@ -74,8 +70,8 @@ body.void .hero h1 { opacity:0; }
   letter-spacing:2px; margin-bottom:40px;
   transition: all 2s;
 }
-body.dying .hero .subtitle { color:#3a3530; }
-body.void .hero .subtitle { opacity:0; }
+body.dying .hero .subtitle { opacity:0.4; }
+body.void  .hero .subtitle { opacity:0; }
 
 .hero-stats {
   display:flex; justify-content:center; gap:48px; margin-bottom:40px;
@@ -89,8 +85,8 @@ body.void .hero .subtitle { opacity:0; }
   font-size:9px; letter-spacing:3px; text-transform:uppercase;
   color:var(--ink-faint);
 }
-body.dying .hero-stat .num { color:#5a4a30; }
-body.void .hero-stats { opacity:0; }
+body.dying .hero-stat .num { opacity:0.4; }
+body.void  .hero-stats { opacity:0; }
 
 /* ═══ MINT SECTION (fake) ═══ */
 .mint-section {
@@ -107,8 +103,8 @@ body.void .hero-stats { opacity:0; }
   min-width:280px;
   transition: all 2s;
 }
-body.dying .claim-box { border-color:#2a2520; background:#1a1511; opacity:0.3; }
-body.void .claim-box { opacity:0; }
+body.dying .claim-box { opacity:0.3; }
+body.void  .claim-box { opacity:0; }
 
 .claim-box h3 {
   font-family:'JetBrains Mono', monospace;
@@ -174,6 +170,14 @@ body.void .grid-section h2 { opacity:0; }
   transition: all 1.5s ease-in;
 }
 
+/* ═══ MERGE FLIGHT — cells detach and fly into The One ═══ */
+.specimen-cell.flying {
+  position:fixed !important;
+  margin:0 !important;
+  z-index:100;
+  will-change: transform, opacity;
+}
+
 @keyframes glitchShift {
   0%   { transform:translate(0,0); filter:none; }
   20%  { transform:translate(-3px,1px); filter:hue-rotate(90deg) saturate(3); }
@@ -205,9 +209,9 @@ body.void .grid-section h2 { opacity:0; }
   width:480px; height:480px;
   position:relative;
   margin:0 auto 32px;
-  border:1px solid #222;
+  border:1px solid var(--parchment-deep);
   overflow:hidden;
-  background:#000;
+  background:var(--parchment);
 }
 .the-one-frame canvas {
   width:100%; height:100%;
@@ -251,8 +255,7 @@ body.void .grid-section h2 { opacity:0; }
   );
   animation:scanline 8s linear infinite;
 }
-body.dying .scanlines { display:block; }
-body.void .scanlines { display:block; opacity:0.5; }
+/* keep the scanlines off — ivory aesthetic */
 
 /* ═══ CONTROLS (test only) ═══ */
 .test-controls {
@@ -423,25 +426,22 @@ function triggerDestruction() {
   phase = 'DESTROYING';
   destructionStep = 0;
 
-  // Phase bar shift
   document.getElementById('phaseLabel').textContent = 'Deteriorating';
   document.getElementById('phaseTimer').textContent = '';
   document.getElementById('phaseTimer').classList.add('urgent');
 
-  // Body class
   document.body.classList.add('dying');
 
   const cells = Array.from(document.querySelectorAll('.specimen-cell'));
 
-  // Step 1: glitch all cells in place
+  // Cells flash in place with a chaotic trait shuffle while supply ticks down
   cells.forEach(c => c.classList.add('glitching'));
 
-  // Step 2: chaotic trait shuffle pulses while supply ticks down
   let chaos = 0;
-  const CHAOS_TICKS = 14;
+  const CHAOS_TICKS = 12;
   const chaosInterval = setInterval(() => {
     cells.forEach(c => {
-      if (Math.random() > 0.35) {
+      if (Math.random() > 0.3) {
         const randomSpec = SPECIMEN_DATA[Math.floor(Math.random() * SPECIMEN_DATA.length)];
         c.querySelector('img').src = 'data:image/svg+xml;base64,' + randomSpec.svg;
       }
@@ -449,62 +449,97 @@ function triggerDestruction() {
 
     chaos++;
     const t = chaos / CHAOS_TICKS;
-    document.getElementById('destructionBar').style.width = (t * 60) + '%';
-    const remaining = Math.max(1, Math.floor(4999 * (1 - t)));
-    document.getElementById('supplyNum').textContent = remaining.toLocaleString();
+    document.getElementById('destructionBar').style.width = (t * 55) + '%';
+    document.getElementById('supplyNum').textContent =
+      Math.max(1, Math.floor(4999 * (1 - t))).toLocaleString();
 
-    if (chaos === Math.floor(CHAOS_TICKS * 0.4)) {
+    if (chaos === Math.floor(CHAOS_TICKS * 0.5)) {
       document.getElementById('phaseLabel').textContent = 'Collapsing';
-    }
-    if (chaos === Math.floor(CHAOS_TICKS * 0.75)) {
-      document.getElementById('phaseLabel').textContent = 'Converging';
     }
 
     if (chaos >= CHAOS_TICKS) {
       clearInterval(chaosInterval);
-      mergeIntoOne(cells);
+      mergeIntoTheOne(cells);
     }
-  }, 140);
+  }, 130);
 }
 
-// All cells fly toward the viewport center, scale down, blur and fuse
-// into a single point. That fused point becomes The One.
-function mergeIntoOne(cells) {
+// Reveal The One in the center, start the live renderer, then animate
+// every cell flying toward the frame at full size and fading into it.
+function mergeIntoTheOne(cells) {
   document.getElementById('phaseLabel').textContent = 'Merging';
   document.getElementById('supplyNum').textContent = '1';
 
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
-
+  // Snapshot grid positions and convert each cell to position:fixed BEFORE
+  // we hide the grid (hiding would otherwise destroy their layout)
+  const snapshots = cells.map(c => c.getBoundingClientRect());
   cells.forEach((cell, i) => {
+    const r = snapshots[i];
+    cell.style.left   = r.left + 'px';
+    cell.style.top    = r.top  + 'px';
+    cell.style.width  = r.width  + 'px';
+    cell.style.height = r.height + 'px';
     cell.classList.remove('glitching');
-    const rect = cell.getBoundingClientRect();
-    const cellCx = rect.left + rect.width / 2;
-    const cellCy = rect.top + rect.height / 2;
-    const dx = cx - cellCx;
-    const dy = cy - cellCy;
-    // Stagger so cells from the edges arrive last — feels like a vortex
-    const dist = Math.hypot(dx, dy);
-    const delay = Math.max(0, 380 - dist * 0.6) + Math.random() * 120;
-    const rot = (Math.random() - 0.5) * 540;
-    cell.style.transition =
-      `transform 1.6s cubic-bezier(0.55, 0.05, 0.25, 1) ${delay}ms,` +
-      `opacity 1.6s ease-in ${delay + 700}ms,` +
-      `filter 1.6s ease-out ${delay}ms`;
-    cell.style.transform = `translate(${dx}px, ${dy}px) scale(0.04) rotate(${rot}deg)`;
-    cell.style.opacity = '0';
-    cell.style.filter = 'blur(6px) brightness(1.8)';
+    cell.classList.add('flying');
   });
 
-  document.getElementById('destructionBar').style.width = '100%';
+  // Reveal The One *now* so it's the destination for the merge
+  document.getElementById('heroSection').style.display = 'none';
+  document.getElementById('mintSection').style.display = 'none';
+  document.getElementById('gridSection').style.display = 'none';
+  document.getElementById('theOneContainer').classList.add('active');
 
-  // Once everything has converged on the center point, reveal The One there.
-  setTimeout(() => beginMorph(), 2200);
+  // Start the live renderer so the destination is already alive when cards arrive
+  startOneOfOneRenderer();
+
+  // Wait one frame so the frame has its laid-out position, then animate
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const frame = document.querySelector('.the-one-frame');
+      const tr = frame.getBoundingClientRect();
+      const targetCx = tr.left + tr.width  / 2;
+      const targetCy = tr.top  + tr.height / 2;
+
+      cells.forEach((cell, i) => {
+        const r = cell.getBoundingClientRect();
+        const dx = targetCx - (r.left + r.width  / 2);
+        const dy = targetCy - (r.top  + r.height / 2);
+        const scale = tr.width / r.width;
+        const delay = i * 18 + Math.random() * 120;
+
+        cell.style.transition =
+          `transform 1.4s cubic-bezier(0.45, 0, 0.2, 1) ${delay}ms,` +
+          `opacity 0.7s ease-out ${delay + 900}ms`;
+        cell.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+        cell.style.opacity = '0';
+        cell.style.zIndex = 200 + i;
+      });
+
+      document.getElementById('destructionBar').style.width = '100%';
+
+      // After everyone has merged in, finalize the phase
+      setTimeout(() => {
+        cells.forEach(c => c.remove());
+        document.body.classList.remove('dying');
+        document.body.classList.add('void');
+        document.getElementById('phaseLabel').textContent = 'The One';
+        document.getElementById('phaseTimer').textContent = '#0';
+        document.getElementById('phaseTimer').classList.remove('urgent');
+        document.getElementById('destructionBar').style.background = '#aaa';
+        phase = 'ONE';
+      }, 2700);
+    });
+  });
 }
 
+// Hard skip — used by the test "skip to 1-of-1" button. Reveals The One
+// instantly without the merge animation.
 function beginMorph() {
   document.body.classList.remove('dying');
   document.body.classList.add('void');
+
+  // Remove any orphaned flying clones
+  document.querySelectorAll('.specimen-cell.flying').forEach(c => c.remove());
 
   // Hide the mint page stuff
   document.getElementById('heroSection').style.display = 'none';
@@ -517,7 +552,7 @@ function beginMorph() {
   document.getElementById('phaseTimer').textContent = '#0';
   document.getElementById('phaseTimer').classList.remove('urgent');
   document.getElementById('destructionBar').style.width = '100%';
-  document.getElementById('destructionBar').style.background = '#333';
+  document.getElementById('destructionBar').style.background = '#aaa';
 
   phase = 'ONE';
   startOneOfOneRenderer();
@@ -881,7 +916,7 @@ function resetAll() {
   phase = 'COUNTDOWN';
   frameCount = 0;
 
-  document.body.classList.remove('dying','void');
+  document.body.classList.remove('dying','void','shaking');
   document.getElementById('heroSection').style.display = '';
   document.getElementById('mintSection').style.display = '';
   document.getElementById('gridSection').style.display = '';
@@ -893,14 +928,25 @@ function resetAll() {
   document.getElementById('destructionBar').style.width = '0';
   document.getElementById('destructionBar').style.background = 'var(--red)';
 
-  // Reset grid cells
+  // Remove any flying-card clones that beginMorph() may not have cleaned up,
+  // then reset the original grid cells
+  const grid = document.getElementById('specimenGrid');
+  document.querySelectorAll('.specimen-cell').forEach(c => {
+    if (c.parentElement !== grid) c.remove();
+  });
   document.querySelectorAll('.specimen-cell').forEach((cell, i) => {
-    cell.classList.remove('glitching','dying');
+    cell.classList.remove('glitching','dying','flying','converging');
     cell.style = '';
     if (SPECIMEN_DATA[i]) {
       cell.querySelector('img').src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[i].svg;
     }
   });
+  // If beginMorph orphaned cells from the grid, rebuild whatever is missing
+  const grid2 = document.getElementById('specimenGrid');
+  if (grid2 && grid2.children.length < SPECIMEN_DATA.length) {
+    grid2.innerHTML = '';
+    init();
+  }
 }
 
 // ═══════════════════════════════════════
