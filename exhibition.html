@@ -1092,6 +1092,7 @@ function skipToOne() {
   document.getElementById('phaseLabel').textContent = 'The One';
   document.getElementById('phaseTimer').textContent = '#0';
   document.getElementById('phaseTimer').classList.remove('urgent');
+  document.getElementById('modeToggle').classList.add('show');
   phase = 'ONE';
   startOneOfOneRenderer();
 }
@@ -1105,13 +1106,17 @@ function resetAll() {
   document.getElementById('heroSection').style.display = '';
   document.getElementById('mintSection').style.display = '';
   document.getElementById('gridSection').style.display = '';
-  document.getElementById('theOneContainer').classList.remove('active');
+  document.getElementById('theOneContainer').classList.remove('active','transitioning');
+  document.getElementById('theOneContainer').style.display = '';
+  document.getElementById('exhibitionContainer').classList.remove('active');
+  document.getElementById('modeToggle').classList.remove('show');
   document.getElementById('phaseLabel').textContent = 'Mint Opens In';
   document.getElementById('phaseTimer').textContent = '03:00:00';
   document.getElementById('phaseTimer').classList.remove('urgent');
   document.getElementById('supplyNum').textContent = '4,999';
   document.getElementById('destructionBar').style.width = '0';
   document.getElementById('destructionBar').style.background = 'var(--red)';
+  exhibitionActive = false;
 
   // Reset grid cells
   document.querySelectorAll('.specimen-cell').forEach((cell, i) => {
