@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Argonauts — 4,999 On-Chain Skeletal Voyagers</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.9.0/ethers.umd.min.js"></script>
+<link rel="stylesheet" href="generator_embed.css">
+<link rel="stylesheet" href="mint_enhance.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@300;400&display=swap');
 
@@ -920,7 +922,7 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
     <a href="#about">About</a>
     <a href="#mint">Mint</a>
     <a href="#rarity">Rarity</a>
-    <a href="generator.html">Generator</a>
+    <a href="#" onclick="openGenerator(); return false;">Generator</a>
     <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">Connect</button>
   </div>
 </nav>
@@ -953,7 +955,10 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
       <div class="meta-label">Pixels</div>
     </div>
   </div>
-  <!-- Flanking specimen thumbnails -->
+  <div style="text-align:center;">
+    <button class="hero-gen-btn" onclick="openGenerator()">Open Generator</button>
+  </div>
+  <!-- Flanking specimen thumbnails (live) -->
   <div class="hero-specimens" id="heroSpecimens"></div>
 </section>
 
@@ -1205,6 +1210,9 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
 </div>
 
 <script src="specimen_data.js"></script>
+<script src="trait_data_24.js"></script>
+<script src="generator_embed.js"></script>
+<script src="mint_enhance.js"></script>
 <script>
 // ═══ CONFIG ═══
 const CONFIG = {

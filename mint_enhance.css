@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════════════════════════════
+   MINT_ENHANCE — index.html-only additions
+   - Live palette picker (eyeshadow case)
+   - Hero live-preview tweaks
+   - Hero "Open Generator" CTA
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══ PALETTE BAR — eyeshadow-case style (fixed bottom-left) ═══ */
+.mint-palette-bar {
+  position:fixed;
+  bottom:24px;
+  left:24px;
+  z-index:90;
+  display:none;
+  grid-template-columns:repeat(2, 24px);
+  gap:5px;
+  padding:14px 10px 10px;
+  background: var(--parchment-deep);
+  border:1px solid var(--gold);
+  box-shadow: 0 6px 22px rgba(60,45,15,0.22), inset 0 0 0 1px rgba(240,232,216,0.5);
+}
+.mint-palette-bar.show { display:grid; }
+.mint-palette-bar::before {
+  content:'PALETTE';
+  position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+  font-family:'JetBrains Mono', monospace;
+  font-size:7px; letter-spacing:3px;
+  color:var(--gold);
+  white-space:nowrap;
+}
+.mint-palette-swatch {
+  width:24px; height:24px;
+  border:1px solid rgba(26,26,24,0.35);
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.2s;
+  position:relative;
+  image-rendering:pixelated;
+}
+.mint-palette-swatch:hover { transform:scale(1.15); border-color:var(--gold); }
+.mint-palette-swatch.active {
+  box-shadow: 0 0 0 2px var(--gold), 0 0 8px rgba(223,183,71,0.55);
+  border-color:var(--gold);
+  transform:scale(1.1);
+}
+
+/* When palette is dark, soften fixed UI to match */
+body.palette-dark nav,
+body.palette-dark .palette-section {
+  background:rgba(20,18,15,0.78) !important;
+  color:var(--ink);
+}
+
+/* ═══ HERO "Open Generator" button ═══ */
+.hero-gen-btn {
+  display:inline-block;
+  margin-top:14px;
+  margin-left:12px;
+  padding:14px 30px;
+  background:transparent;
+  color:var(--gold-dark);
+  border:1px solid var(--gold);
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+.hero-gen-btn:hover {
+  background:rgba(223,183,71,0.12);
+  color:var(--ink);
+  box-shadow:0 0 24px rgba(223,183,71,0.18);
+}
+
+/* ═══ Hero live previews ═══ */
+.hero-specimen.live {
+  image-rendering:pixelated;
+  -webkit-image-rendering:pixelated;
+  cursor:pointer;
+  transition:transform 0.4s, box-shadow 0.4s;
+}
+.hero-specimen.live:hover {
+  transform:scale(1.04);
+  box-shadow:0 8px 28px rgba(223,183,71,0.18);
+}
