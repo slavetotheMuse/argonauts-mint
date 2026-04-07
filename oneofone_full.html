@@ -569,9 +569,19 @@ let frozenAt = 0;
 let unfreezeTimeout = null;
 
 function renderGlitch(ctx, images) {
-  // Breathing speed: fast most of the time, slows down every ~6 seconds
+  // Three-state breathing:
+  //   normal (~80% of time)  → 0.82  (about 18% slower than original)
+  //   speed-up burst         → 1.0   (original fast speed)
+  //   crawl                  → 0.12  (rare slow phase)
   const breath = Math.sin(frameCount * 0.017); // ~6s cycle
-  const speed = breath < -0.5 ? 0.12 : 1.0;
+  let speed;
+  if (breath < -0.5) {
+    speed = 0.12;       // crawl
+  } else if (breath > 0.6) {
+    speed = 1.0;        // burst
+  } else {
+    speed = 0.82;       // normal slightly-slower state
+  }
 
   // If frozen from click, hold glitchTime still
   if (!frozen) {
