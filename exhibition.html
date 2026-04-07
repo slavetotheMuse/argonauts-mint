@@ -727,11 +727,12 @@ function renderCrew() {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    // Pick one trait per layer (filename string)
+    // Pick one trait per layer (filename string, with .png so it matches
+    // both the rule constants and the preloaded image keys)
     const pick = layer => {
       const traits = traitsByLayer[layer];
       if (!traits || traits.length === 0) return null;
-      return traits[Math.floor(Math.random() * traits.length)].name;
+      return traits[Math.floor(Math.random() * traits.length)].name + '.png';
     };
 
     let combo = {
