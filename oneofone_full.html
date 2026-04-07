@@ -569,9 +569,9 @@ let frozenAt = 0;
 let unfreezeTimeout = null;
 
 function renderGlitch(ctx, images) {
-  // Mostly fast with rare brief slowdowns — matches the first desync version
+  // Steady 0.12 baseline, occasional crawl to 0.04
   const breath = Math.sin(frameCount * 0.017); // ~6s cycle
-  const speed = breath < -0.5 ? 0.12 : 1.0;
+  const speed = breath < -0.5 ? 0.04 : 0.12;
 
   // If frozen from click, hold glitchTime still
   if (!frozen) {
