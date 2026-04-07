@@ -628,16 +628,6 @@ function renderGlitch(ctx, images) {
     }
   }
 
-  // 3. Horizontal tear bands — random rare displacement strips
-  if (!frozen && !isSlow && Math.random() < 0.06) {
-    const tearY = Math.random() * 480;
-    const tearH = 4 + Math.random() * 16;
-    const tearShift = (Math.random() - 0.5) * 30;
-    const slice = ctx.getImageData(0, tearY, 480, tearH);
-    ctx.clearRect(0, tearY, 480, tearH);
-    ctx.putImageData(slice, tearShift, tearY);
-  }
-
   // 4. Color wash overlay — slow shifting hue tint that pulses with speed
   if (!frozen) {
     const hue = (frameCount * 0.5) % 360;

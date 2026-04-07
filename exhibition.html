@@ -701,7 +701,7 @@ function renderCrew() {
     return;
   }
 
-  // Generate 8 random crew members (4 cols × 2 rows)
+  // Generate 8 rule-respecting crew members (4 cols × 2 rows)
   for (let i = 0; i < 8; i++) {
     const frame = document.createElement('div');
     frame.className = 'crew-frame';
@@ -712,12 +712,31 @@ function renderCrew() {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    // Random trait per layer
-    LAYERS.forEach(layer => {
+    // Pick one trait per layer (filename string)
+    const pick = layer => {
       const traits = traitsByLayer[layer];
-      if (!traits || traits.length === 0) return;
-      const idx = Math.floor(Math.random() * traits.length);
-      const img = preloadedTraitImages[traits[idx].key];
+      if (!traits || traits.length === 0) return null;
+      return traits[Math.floor(Math.random() * traits.length)].name;
+    };
+
+    let combo = {
+      background: pick('background'),
+      body:       pick('body'),
+      eyes:       pick('eyes'),
+      hoodie:     pick('hoodie'),
+      neck:       pick('neck'),
+      mouth:      pick('mouth'),
+      head:       pick('head'),
+    };
+
+    combo = applyTraitRules(combo);
+
+    // Render in layer order; skip nulls
+    LAYERS.forEach(layer => {
+      const name = combo[layer];
+      if (!name) return;
+      const key = `${layer}/${name}`;
+      const img = preloadedTraitImages[key];
       if (!img) return;
       ctx.drawImage(img, 0, 0, 240, 240);
     });
@@ -725,6 +744,89 @@ function renderCrew() {
     frame.appendChild(canvas);
     wall.appendChild(frame);
   }
+}
+
+// ═══════════════════════════════════════
+// TRAIT RULES — mirrors Argonauts.sol _applyRules
+// ═══════════════════════════════════════
+function applyTraitRules(t) {
+  // Names match the .png filenames (without extension)
+  const BG_BLACKGREY  = 'blackgrey.png';
+  const BG_BUBBLEGUM  = 'bubblegum.png';
+
+  const BODY_ALIEN        = 'alienfixed.png';
+  const BODY_CORAL        = 'coral.png';
+  const BODY_RADIOACTIVE  = 'radioactive.png';
+  const BODY_FLOWERS_BARE = 'flowers_bare.png';
+  const BODY_FLOWERS_WITH = 'flowers_with.png';
+  const BODY_GOLD         = 'gold.png';
+  const BODY_COMMON       = 'common_bone.png';
+
+  const EYES_ALIEN_EP = 'Alien_eyepatch.png';
+  const EYES_DIGITAL  = 'digital_frames.png';
+  const EYES_EYEPATCH = 'eyepatch.png';
+  const EYES_SHADES   = 'shades.png';
+
+  const HEAD_GOLDEN_FLEECE = 'golden_fleece.png';
+  const NECK_GOLD          = 'gold.png';
+
+  // Rule 1: Hat and hoodie mutually exclusive
+  if (t.hoodie && t.head) {
+    if (t.head.length % 2 === 0) t.head = null;
+    else                          t.hoodie = null;
+  }
+
+  // Rule 2: Coral body — no hoodie
+  if (t.body === BODY_CORAL) t.hoodie = null;
+
+  // Rule 3a: Alien eyepatch only on alien body
+  if (t.body !== BODY_ALIEN && t.eyes === EYES_ALIEN_EP) t.eyes = null;
+
+  // Rule 3b: Aliens can't wear digital frames
+  if (t.body === BODY_ALIEN && t.eyes === EYES_DIGITAL) t.eyes = null;
+
+  // Rule 3c: Aliens can't wear regular eyepatch or shades
+  if (t.body === BODY_ALIEN &&
+      (t.eyes === EYES_EYEPATCH || t.eyes === EYES_SHADES)) {
+    t.eyes = null;
+  }
+
+  // Rule 4: Radioactive or flowers — no shades
+  if ((t.body === BODY_RADIOACTIVE ||
+       t.body === BODY_FLOWERS_BARE ||
+       t.body === BODY_FLOWERS_WITH) &&
+      t.eyes === EYES_SHADES) {
+    t.eyes = null;
+  }
+
+  // Rule 5: Flowers — no digital frames
+  if ((t.body === BODY_FLOWERS_BARE || t.body === BODY_FLOWERS_WITH) &&
+      t.eyes === EYES_DIGITAL) {
+    t.eyes = null;
+  }
+
+  // Rule 6: Only gold body can have golden fleece
+  if (t.body !== BODY_GOLD && t.head === HEAD_GOLDEN_FLEECE) t.head = null;
+
+  // Rule 7: Gold or alien body — no necklace
+  if ((t.body === BODY_GOLD || t.body === BODY_ALIEN) && t.neck === NECK_GOLD) {
+    t.neck = null;
+  }
+
+  // Rule 8: Bubblegum bg — no radioactive (force common)
+  if (t.background === BG_BUBBLEGUM && t.body === BODY_RADIOACTIVE) {
+    t.body = BODY_COMMON;
+  }
+
+  // Rule 9a: Black background — no eyepatch
+  if (t.background === BG_BLACKGREY && t.eyes === EYES_EYEPATCH) t.eyes = null;
+
+  // Rule 9b: Black background + no hoodie — no shades
+  if (t.background === BG_BLACKGREY && !t.hoodie && t.eyes === EYES_SHADES) {
+    t.eyes = null;
+  }
+
+  return t;
 }
 
 function shuffleCrew() {
@@ -851,16 +953,6 @@ function renderGlitch(ctx, images) {
       ctx.fillStyle = Math.random() > 0.5 ? '#fff' : '#000';
       ctx.fillRect(x, y, size, size);
     }
-  }
-
-  // 3. Horizontal tear bands — random rare displacement strips
-  if (!frozen && !isSlow && Math.random() < 0.06) {
-    const tearY = Math.random() * 480;
-    const tearH = 4 + Math.random() * 16;
-    const tearShift = (Math.random() - 0.5) * 30;
-    const slice = ctx.getImageData(0, tearY, 480, tearH);
-    ctx.clearRect(0, tearY, 480, tearH);
-    ctx.putImageData(slice, tearShift, tearY);
   }
 
   // 4. Color wash overlay — slow shifting hue tint that pulses with speed
