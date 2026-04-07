@@ -10,7 +10,7 @@
   position:fixed;
   bottom:24px;
   left:24px;
-  z-index:90;
+  z-index:310;
   display:none;
   grid-template-columns:repeat(2, 24px);
   gap:5px;

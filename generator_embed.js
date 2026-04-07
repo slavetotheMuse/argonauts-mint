@@ -142,12 +142,13 @@
     div.className = 'gen-overlay';
     div.id = 'genOverlay';
     div.innerHTML =
+      '<button class="gen-fixed-close" id="genFixedCloseBtn" title="Close (Esc)">\u2715  Back</button>' +
       '<div class="gen-nav">' +
         '<div class="gen-nav-brand">' +
           '<img src="ack_logo.png" alt="ACK">' +
           '<span>Argonauts &middot; Generator</span>' +
         '</div>' +
-        '<button class="gen-nav-close" id="genCloseBtn">Close</button>' +
+        '<button class="gen-nav-close" id="genCloseBtn">\u2190 Back</button>' +
       '</div>' +
       '<div class="gen-header">' +
         '<h1>Generator</h1>' +
@@ -675,6 +676,8 @@
       });
     });
     root.querySelector('#genCloseBtn').addEventListener('click', closeGenerator);
+    var fixedClose = root.querySelector('#genFixedCloseBtn');
+    if (fixedClose) fixedClose.addEventListener('click', closeGenerator);
   }
 
   // ─── Lifecycle ───
