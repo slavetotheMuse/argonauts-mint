@@ -513,55 +513,100 @@ nav {
 .mint-section {
   padding: 100px 24px 120px;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   position: relative;
 }
 
-.shuffle-box {
-  width: 200px;
-  height: 200px;
-  flex-shrink: 0;
+.mint-frame {
+  max-width: 540px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Outer card: matches .gen-overlay .preview-frame in generator */
+.mint-card {
+  position: relative;
+  padding: 4px;                    /* gold gradient "frame" */
+  margin-top: 40px;
+  background: linear-gradient(135deg,
+    rgba(223,183,71,0.45) 0%,
+    rgba(200,180,140,0.12) 25%,
+    rgba(223,183,71,0.28) 50%,
+    rgba(200,180,140,0.12) 75%,
+    rgba(223,183,71,0.45) 100%);
+  box-shadow:
+    0 6px 36px rgba(0,0,0,0.07),
+    0 0 80px rgba(223,183,71,0.06);
+}
+
+/* Double gold corner ornaments — same as preview-frame */
+.mint-card::before, .mint-card::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.6;
+}
+.mint-card::before { top: -3px; left: -3px;  border-width: 2px 0 0 2px; }
+.mint-card::after  { bottom: -3px; right: -3px; border-width: 0 2px 2px 0; }
+
+/* Inner panel: parchment-dark to match generator preview-inner */
+.mint-card-inner {
+  background: var(--parchment-dark, #e4d9c4);
+  padding: 48px 40px 40px;
+  position: relative;
+}
+
+/* Shuffling specimen strip across the top of the card */
+.mint-shuffle-strip {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: -8px auto 32px;
+}
+.mint-shuffle-cell {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  padding: 3px;
+  background: linear-gradient(135deg,
+    rgba(223,183,71,0.55) 0%,
+    rgba(200,180,140,0.15) 50%,
+    rgba(223,183,71,0.55) 100%);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.mint-shuffle-cell::before, .mint-shuffle-cell::after {
+  content: '';
+  position: absolute;
+  width: 8px; height: 8px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.65;
+}
+.mint-shuffle-cell::before { top: -2px; left: -2px; border-width: 1.5px 0 0 1.5px; }
+.mint-shuffle-cell::after  { bottom: -2px; right: -2px; border-width: 0 1.5px 1.5px 0; }
+.mint-shuffle-cell .shuffle-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--parchment, #f0e8d8);
   overflow: hidden;
 }
-.shuffle-box img {
+.mint-shuffle-cell img {
   width: 100%;
   height: 100%;
   display: block;
+  opacity: 0;
+  transition: opacity .55s ease;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   -webkit-image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
 }
-
-.mint-frame {
-  max-width: 440px;
-  width: 100%;
-  text-align: center;
-}
-
-.mint-card {
-  background: white;
-  border: 1px solid var(--gold-pale);
-  padding: 56px 44px;
-  margin-top: 40px;
-  position: relative;
-  box-shadow: 0 2px 24px rgba(0,0,0,0.04);
-}
-
-/* Double gold corner ornaments */
-.mint-card::before, .mint-card::after {
-  content: '';
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  border-color: var(--gold);
-  border-style: solid;
-  opacity: 0.55;
-}
-.mint-card::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
-.mint-card::after { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+.mint-shuffle-cell img.loaded { opacity: 1; }
 
 .mint-label {
   font-family: 'JetBrains Mono', monospace;
@@ -903,8 +948,9 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
   .meta-num { font-size: 28px; }
   .hero-specimens { gap: 8px; }
   .hero-specimen { width: 56px; height: 56px; }
-  .mint-card { padding: 40px 28px; }
-  .shuffle-box { display: none; }
+  .mint-card-inner { padding: 36px 24px 32px; }
+  .mint-shuffle-cell { width: 64px; height: 64px; }
+  .mint-shuffle-strip { gap: 6px; }
   .rarity-grid { grid-template-columns: 1fr; }
   .specimen { width: 80px; height: 80px; }
 }
@@ -1050,7 +1096,6 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
 
 <!-- ═══ MINT ═══ -->
 <section class="mint-section" id="mint">
-  <div class="shuffle-box" id="shuffleLeft"><img id="shuffleImgLeft" src="" alt="Argonaut"></div>
   <div class="mint-frame">
     <div class="section-num">II.</div>
     <h2 class="section-heading">Claim</h2>
@@ -1059,30 +1104,39 @@ footer img { height: 28px; opacity: 0.4; margin-bottom: 12px; }
       <div class="orn-diamond"></div>
       <div class="orn-line"></div>
     </div>
-    <div class="mint-card gold-frame">
-      <div class="mint-label">Price per Voyager</div>
-      <div class="mint-price-display">Free</div>
-      <div class="mint-gas">gas only</div>
+    <div class="mint-card">
+      <div class="mint-card-inner">
+        <div class="mint-shuffle-strip" id="mintShuffleStrip">
+          <div class="mint-shuffle-cell"><div class="shuffle-inner"><img alt="" data-shuffle="0"></div></div>
+          <div class="mint-shuffle-cell"><div class="shuffle-inner"><img alt="" data-shuffle="1"></div></div>
+          <div class="mint-shuffle-cell"><div class="shuffle-inner"><img alt="" data-shuffle="2"></div></div>
+          <div class="mint-shuffle-cell"><div class="shuffle-inner"><img alt="" data-shuffle="3"></div></div>
+          <div class="mint-shuffle-cell"><div class="shuffle-inner"><img alt="" data-shuffle="4"></div></div>
+        </div>
 
-      <div class="qty-row">
-        <button class="qty-btn" onclick="adjustQty(-1)">&minus;</button>
-        <div class="qty-num" id="qtyDisplay">1</div>
-        <button class="qty-btn" onclick="adjustQty(1)">+</button>
+        <div class="mint-label">Price per Voyager</div>
+        <div class="mint-price-display">Free</div>
+        <div class="mint-gas">gas only</div>
+
+        <div class="qty-row">
+          <button class="qty-btn" onclick="adjustQty(-1)">&minus;</button>
+          <div class="qty-num" id="qtyDisplay">1</div>
+          <button class="qty-btn" onclick="adjustQty(1)">+</button>
+        </div>
+
+        <button class="mint-btn" id="mintBtn" onclick="mint()" disabled>
+          Connect Wallet
+        </button>
+
+        <div class="mint-progress-track">
+          <div class="mint-progress-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="mint-counter" id="mintCount">&mdash; / 4,999</div>
+
+        <div class="mint-status" id="mintStatus"></div>
       </div>
-
-      <button class="mint-btn" id="mintBtn" onclick="mint()" disabled>
-        Connect Wallet
-      </button>
-
-      <div class="mint-progress-track">
-        <div class="mint-progress-fill" id="progressBar" style="width:0%"></div>
-      </div>
-      <div class="mint-counter" id="mintCount">&mdash; / 4,999</div>
-
-      <div class="mint-status" id="mintStatus"></div>
     </div>
   </div>
-  <div class="shuffle-box" id="shuffleRight"><img id="shuffleImgRight" src="" alt="Argonaut"></div>
 </section>
 
 <div class="divider-gold"></div>
@@ -1396,33 +1450,51 @@ document.querySelectorAll('nav a').forEach(a => {
   }
 });
 
-// ═══ SHUFFLE BOXES ═══
+// ═══ MINT CARD SHUFFLING SPECIMENS ═══
+// Live-shuffle the strip of 5 framed specimens inside the claim card.
+// Uses genRandomSVG() from generator_embed.js so they match the generator pipeline.
 function startShuffleBoxes() {
-  if (typeof SPECIMEN_DATA === 'undefined' || !SPECIMEN_DATA.length) return;
-  const leftImg = document.getElementById('shuffleImgLeft');
-  const rightImg = document.getElementById('shuffleImgRight');
-  if (!leftImg || !rightImg) return;
+  const cells = document.querySelectorAll('#mintShuffleStrip img[data-shuffle]');
+  if (!cells.length) return;
 
-  function randomSpecimen(exclude) {
-    let idx;
-    do { idx = Math.floor(Math.random() * SPECIMEN_DATA.length); } while (idx === exclude && SPECIMEN_DATA.length > 1);
-    return idx;
+  function waitForGen(cb) {
+    if (typeof window.genRandomSVG === 'function') return cb();
+    setTimeout(() => waitForGen(cb), 80);
   }
 
-  let leftIdx = randomSpecimen(-1);
-  let rightIdx = randomSpecimen(leftIdx);
-  leftImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[leftIdx].svg;
-  rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
+  function setRandom(img) {
+    try {
+      const next = window.genRandomSVG();
+      img.classList.remove('loaded');
+      // Brief fade out, then swap
+      setTimeout(() => {
+        img.src = next;
+        img.onload = () => img.classList.add('loaded');
+        // Failsafe in case onload doesn't fire (cached)
+        setTimeout(() => img.classList.add('loaded'), 60);
+      }, 180);
+    } catch (e) {
+      // Fallback to specimen data if generator helper isn't ready
+      if (typeof SPECIMEN_DATA !== 'undefined' && SPECIMEN_DATA.length) {
+        const sp = SPECIMEN_DATA[Math.floor(Math.random() * SPECIMEN_DATA.length)];
+        img.src = 'data:image/svg+xml;base64,' + sp.svg;
+        img.classList.add('loaded');
+      }
+    }
+  }
 
-  setInterval(() => {
-    leftIdx = randomSpecimen(rightIdx);
-    leftImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[leftIdx].svg;
-  }, 2500);
+  waitForGen(() => {
+    // Initial fill — stagger the first paint so they don't pop in unison
+    cells.forEach((img, i) => setTimeout(() => setRandom(img), i * 140));
 
-  setInterval(() => {
-    rightIdx = randomSpecimen(leftIdx);
-    rightImg.src = 'data:image/svg+xml;base64,' + SPECIMEN_DATA[rightIdx].svg;
-  }, 3200);
+    // Each cell cycles on its own offset so the strip is always in motion
+    const intervals = [2400, 2900, 3300, 2700, 3100];
+    cells.forEach((img, i) => {
+      setTimeout(() => {
+        setInterval(() => setRandom(img), intervals[i] || 2800);
+      }, 1200 + i * 320);
+    });
+  });
 }
 
 // ═══ INIT ═══
