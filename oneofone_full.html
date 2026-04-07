@@ -570,17 +570,17 @@ let unfreezeTimeout = null;
 
 function renderGlitch(ctx, images) {
   // Three-state breathing:
-  //   normal (~80% of time)  → 0.70  (about 18% slower than original 0.85 baseline)
-  //   speed-up burst         → 0.85  (matches the original oneofone.html feel)
+  //   normal (~80% of time)  → 0.83  (~17% slower than original)
+  //   speed-up burst         → 1.00  (original oneofone.html speed)
   //   crawl                  → 0.12  (rare slow phase)
   const breath = Math.sin(frameCount * 0.017); // ~6s cycle
   let speed;
   if (breath < -0.5) {
     speed = 0.12;       // crawl
   } else if (breath > 0.6) {
-    speed = 0.85;       // burst back to "good" speed
+    speed = 1.00;       // burst — matches oneofone.html exactly
   } else {
-    speed = 0.70;       // normal — clearly slower
+    speed = 0.83;       // normal — slightly slower
   }
 
   // If frozen from click, hold glitchTime still
@@ -590,10 +590,10 @@ function renderGlitch(ctx, images) {
 
   const isSlow = speed < 0.5;
 
-  // Tight desync ratios — average ≈ 1.0 so they don't add perceived speed.
+  // Desync ratios — all ≤ 1.0 so no layer ever exceeds the original speed.
   // Order: background, body, eyes, hoodie, neck, mouth, head
-  // Spread is small (0.73 → 1.31) but irrational enough to never repeat.
-  const LAYER_RATES = [0.73, 0.83, 0.94, 1.03, 1.13, 1.21, 1.31];
+  // Irrational-ish spacing keeps the combined cycle effectively infinite.
+  const LAYER_RATES = [0.61, 0.71, 0.79, 0.85, 0.89, 0.94, 0.97];
 
   LAYERS.forEach((layer, li) => {
     const traits = traitsByLayer[layer];
