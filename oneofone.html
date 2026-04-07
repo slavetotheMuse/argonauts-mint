@@ -578,6 +578,8 @@ function renderGlitch(ctx, images) {
     glitchTime += speed;
   }
 
+  const isSlow = speed < 0.5;
+
   LAYERS.forEach((layer, li) => {
     const traits = traitsByLayer[layer];
     if (!traits || traits.length === 0) return;
@@ -586,13 +588,18 @@ function renderGlitch(ctx, images) {
     const img = images[traits[idx].key];
     if (!img) return;
 
-    // No wobble — layers drawn at origin
-    ctx.globalAlpha = frozen ? 1.0 : 0.7 + Math.sin(glitchTime * 0.2 + li) * 0.3;
+    // When slow or frozen: full opacity, crisp clean layers
+    // When fast: original alpha flickering
+    if (frozen || isSlow) {
+      ctx.globalAlpha = 1.0;
+    } else {
+      ctx.globalAlpha = 0.7 + Math.sin(glitchTime * 0.2 + li) * 0.3;
+    }
     ctx.drawImage(img, 0, 0, 480, 480);
   });
 
-  // RGB split artifact — only during fast phases, not when frozen
-  if (!frozen && speed > 0.5 && frameCount % 7 < 2) {
+  // RGB split artifact — only during fast phases, not when frozen or slow
+  if (!frozen && !isSlow && frameCount % 7 < 2) {
     ctx.globalCompositeOperation = 'screen';
     ctx.globalAlpha = 0.3;
     const shift = Math.random() * 20 - 10;
