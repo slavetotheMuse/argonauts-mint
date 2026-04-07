@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Argonauts</title>
+<title>10kpfp</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
 :root {
   --ink:#1a1a18; --ink-faint:#8a8778; --gold:#dfb747; --gold-pale:#e8d9a0;
-  --parchment:#f5f0e3; --parchment-deep:#e8e0cc; --void:#0a0a0a;
+  --parchment:#f0e8d8; --parchment-dark:#e4d9c4; --parchment-deep:#d8cab0;
+  --void:#0a0a0a;
   --red:#c0392b; --glitch-cyan:#00fff2; --glitch-magenta:#ff00e6;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -26,7 +27,7 @@ body.void  { background:var(--parchment); color:var(--ink); }
 /* ═══ PHASE INDICATOR ═══ */
 .phase-bar {
   position:fixed; top:0; left:0; right:0; z-index:100;
-  background:rgba(245,240,227,0.95);
+  background:rgba(240,232,216,0.95);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--parchment-deep);
   display:flex; justify-content:center; align-items:center;
@@ -209,12 +210,26 @@ body.void .grid-section h2 { opacity:0; }
   width:480px; height:480px;
   position:relative;
   margin:0 auto 32px;
-  border:1px solid var(--parchment-deep);
-  overflow:hidden;
-  background:var(--parchment);
+  padding:6px;
+  background: linear-gradient(135deg, rgba(223,183,71,0.35) 0%, rgba(200,180,140,0.1) 25%, rgba(223,183,71,0.2) 50%, rgba(200,180,140,0.1) 75%, rgba(223,183,71,0.35) 100%);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.06), 0 0 60px rgba(223,183,71,0.05);
 }
+.the-one-frame::before, .the-one-frame::after {
+  content:'';
+  position:absolute;
+  width:18px; height:18px;
+  border-color:var(--gold);
+  border-style:solid;
+  opacity:0.6;
+  pointer-events:none;
+  z-index:2;
+}
+.the-one-frame::before { top:-2px; left:-2px; border-width:2px 0 0 2px; }
+.the-one-frame::after  { bottom:-2px; right:-2px; border-width:0 2px 2px 0; }
 .the-one-frame canvas {
+  display:block;
   width:100%; height:100%;
+  background:var(--parchment-deep);
   image-rendering:pixelated;
   image-rendering:-moz-crisp-edges;
   image-rendering:crisp-edges;
@@ -222,12 +237,12 @@ body.void .grid-section h2 { opacity:0; }
 .the-one-meta {
   font-family:'JetBrains Mono', monospace;
   font-size:10px; letter-spacing:2px;
-  color:#333;
+  color:var(--ink);
   max-width:480px; margin:0 auto;
   text-align:left;
 }
 .the-one-meta .trait-dead {
-  color:#2a2520;
+  color:var(--ink-faint);
   text-decoration:line-through;
   margin:4px 0;
 }
@@ -238,7 +253,7 @@ body.void .grid-section h2 { opacity:0; }
 .the-one-mode {
   font-family:'JetBrains Mono', monospace;
   font-size:9px; letter-spacing:4px; text-transform:uppercase;
-  color:#444; margin-top:24px;
+  color:var(--ink-faint); margin-top:24px;
 }
 
 /* ═══ SCANLINES OVERLAY ═══ */
@@ -281,6 +296,47 @@ body.void .grid-section h2 { opacity:0; }
   height:100%; width:0; background:var(--red);
   transition:width 0.3s linear;
 }
+
+/* ═══ PALETTE BAR — eyeshadow-case style ═══ */
+.palette-bar {
+  position:fixed; top:50%; right:24px; transform:translateY(-50%);
+  z-index:95;
+  display:none;
+  grid-template-columns:repeat(2, 30px);
+  gap:6px;
+  padding:18px 14px 14px;
+  background: var(--parchment-deep);
+  border:1px solid var(--gold);
+  box-shadow: 0 8px 28px rgba(60,45,15,0.22), inset 0 0 0 1px rgba(240,232,216,0.5);
+}
+.palette-bar.show { display:grid; }
+.palette-bar::before {
+  content:'PALETTE';
+  position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+  font-family:'JetBrains Mono', monospace;
+  font-size:8px; letter-spacing:3px;
+  color:var(--gold);
+  white-space:nowrap;
+}
+.palette-swatch {
+  width:30px; height:30px;
+  border:1px solid rgba(26,26,24,0.35);
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.2s;
+  position:relative;
+  image-rendering:pixelated;
+}
+.palette-swatch:hover { transform:scale(1.12); border-color:var(--gold); }
+.palette-swatch.active {
+  box-shadow: 0 0 0 2px var(--gold), 0 0 10px rgba(223,183,71,0.55);
+  border-color:var(--gold);
+  transform:scale(1.08);
+}
+body.palette-dark .phase-bar,
+body.palette-dark .mode-toggle {
+  background:rgba(20,18,15,0.78);
+  border-color:rgba(240,232,216,0.18);
+}
 </style>
 </head>
 <body>
@@ -296,10 +352,10 @@ body.void .grid-section h2 { opacity:0; }
 
 <!-- HERO -->
 <div class="hero" id="heroSection">
-  <h1>Argonauts</h1>
-  <p class="subtitle">5,000 skeletal voyagers forged in the fires of Colchis. Fully on-chain.</p>
+  <h1>10kpfp</h1>
+  <p class="subtitle">10,000 skeletal voyagers forged in the fires of Colchis. Fully on-chain.</p>
   <div class="hero-stats">
-    <div class="hero-stat"><div class="num" id="supplyNum">4,999</div><div class="label">Supply</div></div>
+    <div class="hero-stat"><div class="num" id="supplyNum">10,000</div><div class="label">Supply</div></div>
     <div class="hero-stat"><div class="num">56</div><div class="label">Traits</div></div>
     <div class="hero-stat"><div class="num">22,680</div><div class="label">Combinations</div></div>
   </div>
@@ -329,6 +385,9 @@ body.void .grid-section h2 { opacity:0; }
   <div class="the-one-mode" id="theOneMode">MODE: GLITCH</div>
   <div class="the-one-meta" id="theOneMeta"></div>
 </div>
+
+<!-- PALETTE BAR (visible during ONE phase) -->
+<div class="palette-bar" id="paletteBar"></div>
 
 <!-- DESTRUCTION PROGRESS -->
 <div class="destruction-progress"><div class="bar" id="destructionBar"></div></div>
@@ -451,7 +510,7 @@ function triggerDestruction() {
     const t = chaos / CHAOS_TICKS;
     document.getElementById('destructionBar').style.width = (t * 55) + '%';
     document.getElementById('supplyNum').textContent =
-      Math.max(1, Math.floor(4999 * (1 - t))).toLocaleString();
+      Math.max(1, Math.floor(10000 * (1 - t))).toLocaleString();
 
     if (chaos === Math.floor(CHAOS_TICKS * 0.5)) {
       document.getElementById('phaseLabel').textContent = 'Collapsing';
@@ -561,6 +620,8 @@ function beginMorph() {
 // ═══════════════════════════════════════
 // THE 1-OF-1 DYNAMIC RENDERER
 // ═══════════════════════════════════════
+let preloadedTraitImages = null;
+
 function startOneOfOneRenderer() {
   const canvas = document.getElementById('theOneCanvas');
   const ctx = canvas.getContext('2d');
@@ -579,12 +640,99 @@ function startOneOfOneRenderer() {
       allTraitImages[key] = img;
       loadCount++;
       if (loadCount === allKeys.length) {
-        // All loaded — start rendering
+        preloadedTraitImages = allTraitImages;
+        buildPaletteBar();
+        document.getElementById('paletteBar').classList.add('show');
         renderLoop(ctx, allTraitImages);
       }
     };
     img.src = TRAIT_B64[key];
   });
+}
+
+// ═══════════════════════════════════════
+// PALETTE PICKER — sample bg traits, let viewer reskin the site
+// ═══════════════════════════════════════
+function buildPaletteBar() {
+  const bar = document.getElementById('paletteBar');
+  if (!bar) return;
+  bar.innerHTML = '';
+
+  // Default parchment swatch first (the original look)
+  const reset = document.createElement('div');
+  reset.className = 'palette-swatch active';
+  reset.style.background = '#f0e8d8';
+  reset.title = 'Parchment (default)';
+  reset.onclick = (ev) => { ev.stopPropagation(); resetPalette(reset); };
+  bar.appendChild(reset);
+
+  // Cooler off-white ivory
+  const offwhite = document.createElement('div');
+  offwhite.className = 'palette-swatch';
+  offwhite.style.background = '#f5f0e3';
+  offwhite.title = 'Off-white ivory';
+  offwhite.onclick = (ev) => { ev.stopPropagation(); applyPalette(245,240,227,offwhite); };
+  bar.appendChild(offwhite);
+
+  const bgs = traitsByLayer.background || [];
+  const sampler = document.createElement('canvas');
+  sampler.width = sampler.height = 24;
+  const sctx = sampler.getContext('2d');
+  sctx.imageSmoothingEnabled = false;
+
+  bgs.forEach(trait => {
+    const img = preloadedTraitImages[trait.key];
+    if (!img) return;
+    sctx.clearRect(0,0,24,24);
+    sctx.drawImage(img, 0, 0, 24, 24);
+    // Average every opaque pixel for a faithful tone — works for solid AND
+    // patterned backgrounds (alien, radioactive, etc.)
+    const data = sctx.getImageData(0,0,24,24).data;
+    let r=0,g=0,b=0,n=0;
+    for (let i=0; i<data.length; i+=4) {
+      if (data[i+3] > 0) { r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
+    }
+    if (n === 0) return;
+    r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
+
+    const swatch = document.createElement('div');
+    swatch.className = 'palette-swatch';
+    swatch.style.background = `rgb(${r},${g},${b})`;
+    swatch.title = trait.name;
+    swatch.onclick = (ev) => { ev.stopPropagation(); applyPalette(r,g,b,swatch); };
+    bar.appendChild(swatch);
+  });
+}
+
+function applyPalette(r, g, b, el) {
+  const root = document.documentElement;
+  root.style.setProperty('--parchment', `rgb(${r},${g},${b})`);
+  const dr = Math.max(0, r-18), dg = Math.max(0, g-18), db = Math.max(0, b-18);
+  root.style.setProperty('--parchment-deep', `rgb(${dr},${dg},${db})`);
+  // Perceptual luminance — flip text to ivory if background is dark
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  if (lum < 0.55) {
+    root.style.setProperty('--ink', '#f0e8d8');
+    root.style.setProperty('--ink-faint', 'rgba(240,232,216,0.62)');
+    document.body.classList.add('palette-dark');
+  } else {
+    root.style.setProperty('--ink', '#1a1a18');
+    root.style.setProperty('--ink-faint', '#8a8778');
+    document.body.classList.remove('palette-dark');
+  }
+  document.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function resetPalette(el) {
+  const root = document.documentElement;
+  root.style.removeProperty('--parchment');
+  root.style.removeProperty('--parchment-deep');
+  root.style.removeProperty('--ink');
+  root.style.removeProperty('--ink-faint');
+  document.body.classList.remove('palette-dark');
+  document.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 
 function renderLoop(ctx, images) {
@@ -595,8 +743,8 @@ function renderLoop(ctx, images) {
     ctx.clearRect(0, 0, 480, 480);
     renderGlitch(ctx, images);
 
-    // Scanline overlay on canvas
-    if (frameCount % 3 === 0) {
+    // Scanline overlay on canvas — only when actively glitching
+    if (!frozen && frameCount % 3 === 0) {
       ctx.fillStyle = 'rgba(0,0,0,0.03)';
       for (let y = 0; y < 480; y += 4) {
         ctx.fillRect(0, y, 480, 2);
@@ -617,8 +765,83 @@ let glitchTime = 0;
 let frozen = false;
 let frozenAt = 0;
 let unfreezeTimeout = null;
+let frozenCombo = null; // valid argonaut composition shown on click
+
+// Pick a single random valid argonaut combo (one trait per layer + rules)
+function pickValidCombo() {
+  const pick = layer => {
+    const traits = traitsByLayer[layer];
+    if (!traits || traits.length === 0) return null;
+    return traits[Math.floor(Math.random() * traits.length)].name + '.png';
+  };
+  let combo = {
+    background: pick('background'),
+    body:       pick('body'),
+    eyes:       pick('eyes'),
+    hoodie:     pick('hoodie'),
+    neck:       pick('neck'),
+    mouth:      pick('mouth'),
+    head:       pick('head'),
+  };
+  return applyTraitRules(combo);
+}
+
+// Mirrors Argonauts.sol _applyRules
+function applyTraitRules(t) {
+  const BG_BLACKGREY  = 'blackgrey.png';
+  const BG_BUBBLEGUM  = 'bubblegum.png';
+  const BODY_ALIEN        = 'alienfixed.png';
+  const BODY_CORAL        = 'coral.png';
+  const BODY_RADIOACTIVE  = 'radioactive.png';
+  const BODY_FLOWERS_BARE = 'flowers_bare.png';
+  const BODY_FLOWERS_WITH = 'flowers_with.png';
+  const BODY_GOLD         = 'gold.png';
+  const BODY_COMMON       = 'common_bone.png';
+  const EYES_ALIEN_EP = 'Alien_eyepatch.png';
+  const EYES_DIGITAL  = 'digital_frames.png';
+  const EYES_EYEPATCH = 'eyepatch.png';
+  const EYES_SHADES   = 'shades.png';
+  const HEAD_GOLDEN_FLEECE = 'golden_fleece.png';
+  const NECK_GOLD          = 'gold.png';
+  if (t.hoodie && t.head) {
+    if (t.head.length % 2 === 0) t.head = null;
+    else                          t.hoodie = null;
+  }
+  if (t.body === BODY_CORAL) t.hoodie = null;
+  if (t.body !== BODY_ALIEN && t.eyes === EYES_ALIEN_EP) t.eyes = null;
+  if (t.body === BODY_ALIEN && t.eyes === EYES_DIGITAL) t.eyes = null;
+  if (t.body === BODY_ALIEN && (t.eyes === EYES_EYEPATCH || t.eyes === EYES_SHADES)) t.eyes = null;
+  if ((t.body === BODY_RADIOACTIVE || t.body === BODY_FLOWERS_BARE || t.body === BODY_FLOWERS_WITH) && t.eyes === EYES_SHADES) t.eyes = null;
+  if ((t.body === BODY_FLOWERS_BARE || t.body === BODY_FLOWERS_WITH) && t.eyes === EYES_DIGITAL) t.eyes = null;
+  if (t.body !== BODY_GOLD && t.head === HEAD_GOLDEN_FLEECE) t.head = null;
+  if ((t.body === BODY_GOLD || t.body === BODY_ALIEN) && t.neck === NECK_GOLD) t.neck = null;
+  if (t.background === BG_BUBBLEGUM && t.body === BODY_RADIOACTIVE) t.body = BODY_COMMON;
+  if (t.background === BG_BLACKGREY && t.eyes === EYES_EYEPATCH) t.eyes = null;
+  if (t.background === BG_BLACKGREY && !t.hoodie && t.eyes === EYES_SHADES) t.eyes = null;
+  return t;
+}
+
+// Render the frozen clean argonaut (generator-style — no fx)
+function renderFrozenClean(ctx, images) {
+  ctx.clearRect(0, 0, 480, 480);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  if (!frozenCombo) frozenCombo = pickValidCombo();
+  LAYERS.forEach(layer => {
+    const name = frozenCombo[layer];
+    if (!name) return;
+    const key = `${layer}/${name}`;
+    const img = images[key];
+    if (!img) return;
+    ctx.drawImage(img, 0, 0, 480, 480);
+  });
+}
 
 function renderGlitch(ctx, images) {
+  if (frozen) {
+    renderFrozenClean(ctx, images);
+    return;
+  }
   // Slow breathing: oscillates smoothly between 0.12 (slow) and 1.0 (fast)
   // ~18s full cycle so each phase lingers
   const breath = Math.sin(frameCount * 0.0058);  // 0..1 after remap
@@ -698,15 +921,16 @@ function renderGlitch(ctx, images) {
   ctx.globalAlpha = 1;
 }
 
-// Click to freeze — holds for 1.5s then resumes
+// Click to freeze — picks a new valid argonaut and holds it for 2.5s
 document.addEventListener('click', function(e) {
-  // Ignore test button clicks
   if (e.target.classList.contains('test-btn')) return;
+  if (e.target.closest('.palette-bar')) return;
   if (phase !== 'ONE') return;
 
+  frozenCombo = pickValidCombo();
   frozen = true;
   if (unfreezeTimeout) clearTimeout(unfreezeTimeout);
-  unfreezeTimeout = setTimeout(() => { frozen = false; }, 1500);
+  unfreezeTimeout = setTimeout(() => { frozen = false; frozenCombo = null; }, 2500);
 });
 
 // ── MODE: FUSION ──
@@ -867,7 +1091,7 @@ function updateMeta(mode) {
     hoodie: 'Cloak', neck: 'Relic', mouth: 'Artifact', head: 'Crown'
   };
 
-  let html = '<div style="margin-bottom:12px;color:#444;letter-spacing:3px;">CONSUMED TRAITS:</div>';
+  let html = '<div style="margin-bottom:12px;color:var(--ink-faint);letter-spacing:3px;">CONSUMED TRAITS:</div>';
   LAYERS.forEach(layer => {
     const traits = traitsByLayer[layer];
     if (!traits) return;
@@ -875,8 +1099,8 @@ function updateMeta(mode) {
     html += `<div class="trait-consumed">${layerNames[layer] || layer}: ALL ${count} (dissolved)</div>`;
   });
 
-  html += '<div style="margin-top:16px;color:#333;letter-spacing:3px;">WHAT REMAINS:</div>';
-  html += '<div style="color:#444;margin:4px 0;">One token. All data. No form.</div>';
+  html += '<div style="margin-top:16px;color:var(--ink);letter-spacing:3px;">WHAT REMAINS:</div>';
+  html += '<div style="color:var(--ink-faint);margin:4px 0;">One token. All data. No form.</div>';
 
   meta.innerHTML = html;
 }
@@ -924,9 +1148,11 @@ function resetAll() {
   document.getElementById('phaseLabel').textContent = 'Mint Opens In';
   document.getElementById('phaseTimer').textContent = '03:00:00';
   document.getElementById('phaseTimer').classList.remove('urgent');
-  document.getElementById('supplyNum').textContent = '4,999';
+  document.getElementById('supplyNum').textContent = '10,000';
   document.getElementById('destructionBar').style.width = '0';
   document.getElementById('destructionBar').style.background = 'var(--red)';
+  document.getElementById('paletteBar').classList.remove('show');
+  resetPalette(null);
 
   // Remove any flying-card clones that beginMorph() may not have cleaned up,
   // then reset the original grid cells
