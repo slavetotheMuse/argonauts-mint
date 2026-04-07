@@ -431,60 +431,75 @@ function triggerDestruction() {
   // Body class
   document.body.classList.add('dying');
 
-  // Start the destruction sequence
   const cells = Array.from(document.querySelectorAll('.specimen-cell'));
-  const totalSteps = cells.length + 20; // extra steps for the morph
 
-  // Step 1: Glitch all cells
+  // Step 1: glitch all cells in place
   cells.forEach(c => c.classList.add('glitching'));
 
-  // Step 2: Start killing cells one by one with random delays
-  let killed = 0;
-  const killOrder = shuffle([...Array(cells.length).keys()]);
-
-  const killInterval = setInterval(() => {
-    if (killed >= cells.length) {
-      clearInterval(killInterval);
-      // All dead — begin morph
-      setTimeout(() => beginMorph(), 800);
-      return;
-    }
-
-    const idx = killOrder[killed];
-    const cell = cells[idx];
-    cell.classList.remove('glitching');
-    cell.classList.add('dying');
-    killed++;
-
-    // Update progress
-    const progress = (killed / totalSteps) * 100;
-    document.getElementById('destructionBar').style.width = progress + '%';
-
-    // Update supply counter
-    const remaining = Math.max(0, 4999 - Math.floor(killed * 166));
-    document.getElementById('supplyNum').textContent = remaining.toLocaleString();
-
-    // Swap random traits on surviving cells for chaos
+  // Step 2: chaotic trait shuffle pulses while supply ticks down
+  let chaos = 0;
+  const CHAOS_TICKS = 14;
+  const chaosInterval = setInterval(() => {
     cells.forEach(c => {
-      if (!c.classList.contains('dying') && Math.random() > 0.5) {
+      if (Math.random() > 0.35) {
         const randomSpec = SPECIMEN_DATA[Math.floor(Math.random() * SPECIMEN_DATA.length)];
         c.querySelector('img').src = 'data:image/svg+xml;base64,' + randomSpec.svg;
       }
     });
 
-    // Phase label updates
-    if (killed === Math.floor(cells.length * 0.3)) {
+    chaos++;
+    const t = chaos / CHAOS_TICKS;
+    document.getElementById('destructionBar').style.width = (t * 60) + '%';
+    const remaining = Math.max(1, Math.floor(4999 * (1 - t)));
+    document.getElementById('supplyNum').textContent = remaining.toLocaleString();
+
+    if (chaos === Math.floor(CHAOS_TICKS * 0.4)) {
       document.getElementById('phaseLabel').textContent = 'Collapsing';
     }
-    if (killed === Math.floor(cells.length * 0.6)) {
-      document.getElementById('phaseLabel').textContent = 'Dissolving';
-    }
-    if (killed === Math.floor(cells.length * 0.9)) {
+    if (chaos === Math.floor(CHAOS_TICKS * 0.75)) {
       document.getElementById('phaseLabel').textContent = 'Converging';
-      document.getElementById('supplyNum').textContent = '1';
     }
 
-  }, 300);
+    if (chaos >= CHAOS_TICKS) {
+      clearInterval(chaosInterval);
+      mergeIntoOne(cells);
+    }
+  }, 140);
+}
+
+// All cells fly toward the viewport center, scale down, blur and fuse
+// into a single point. That fused point becomes The One.
+function mergeIntoOne(cells) {
+  document.getElementById('phaseLabel').textContent = 'Merging';
+  document.getElementById('supplyNum').textContent = '1';
+
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+
+  cells.forEach((cell, i) => {
+    cell.classList.remove('glitching');
+    const rect = cell.getBoundingClientRect();
+    const cellCx = rect.left + rect.width / 2;
+    const cellCy = rect.top + rect.height / 2;
+    const dx = cx - cellCx;
+    const dy = cy - cellCy;
+    // Stagger so cells from the edges arrive last — feels like a vortex
+    const dist = Math.hypot(dx, dy);
+    const delay = Math.max(0, 380 - dist * 0.6) + Math.random() * 120;
+    const rot = (Math.random() - 0.5) * 540;
+    cell.style.transition =
+      `transform 1.6s cubic-bezier(0.55, 0.05, 0.25, 1) ${delay}ms,` +
+      `opacity 1.6s ease-in ${delay + 700}ms,` +
+      `filter 1.6s ease-out ${delay}ms`;
+    cell.style.transform = `translate(${dx}px, ${dy}px) scale(0.04) rotate(${rot}deg)`;
+    cell.style.opacity = '0';
+    cell.style.filter = 'blur(6px) brightness(1.8)';
+  });
+
+  document.getElementById('destructionBar').style.width = '100%';
+
+  // Once everything has converged on the center point, reveal The One there.
+  setTimeout(() => beginMorph(), 2200);
 }
 
 function beginMorph() {
