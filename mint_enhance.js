@@ -93,6 +93,41 @@
     bar.id = 'mintPaletteBar';
     document.body.appendChild(bar);
 
+    // Mobile: compact button + dim backdrop (inert on desktop via CSS)
+    var toggle = document.createElement('button');
+    toggle.className = 'mint-palette-toggle';
+    toggle.id = 'mintPaletteToggle';
+    toggle.setAttribute('aria-label', 'Open palette');
+    document.body.appendChild(toggle);
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'mint-palette-backdrop';
+    backdrop.id = 'mintPaletteBackdrop';
+    document.body.appendChild(backdrop);
+
+    function openDrawer(){
+      bar.classList.add('open');
+      toggle.classList.add('open');
+      backdrop.classList.add('open');
+    }
+    function closeDrawer(){
+      bar.classList.remove('open');
+      toggle.classList.remove('open');
+      backdrop.classList.remove('open');
+    }
+    toggle.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (bar.classList.contains('open')) closeDrawer();
+      else openDrawer();
+    });
+    backdrop.addEventListener('click', closeDrawer);
+    // Close drawer after a swatch selection (mobile UX)
+    bar.addEventListener('click', function(e){
+      if (e.target.classList.contains('mint-palette-swatch') && window.matchMedia('(max-width: 768px)').matches){
+        setTimeout(closeDrawer, 180);
+      }
+    });
+
     function makeSwatch(c, label, isDefault){
       var s = document.createElement('div');
       s.className = 'mint-palette-swatch';

@@ -5,7 +5,8 @@
    - Hero "Open Generator" CTA
    ═══════════════════════════════════════════════════════════════ */
 
-/* ═══ PALETTE BAR — eyeshadow-case style (fixed bottom-left) ═══ */
+/* ═══ PALETTE BAR — eyeshadow-case style ═══ */
+/* Desktop default: wide screens → bottom-left, out of the centered art column */
 .mint-palette-bar {
   position:fixed;
   bottom:24px;
@@ -18,6 +19,7 @@
   background: var(--parchment-deep);
   border:1px solid var(--gold);
   box-shadow: 0 6px 22px rgba(60,45,15,0.22), inset 0 0 0 1px rgba(240,232,216,0.5);
+  transition: left 0.35s ease, right 0.35s ease, bottom 0.35s ease, transform 0.4s cubic-bezier(0.22,0.61,0.36,1);
 }
 .mint-palette-bar.show { display:grid; }
 .mint-palette-bar::before {
@@ -41,6 +43,142 @@
   box-shadow: 0 0 0 2px var(--gold), 0 0 8px rgba(223,183,71,0.55);
   border-color:var(--gold);
   transform:scale(1.1);
+}
+
+/* Hidden by default — only on mobile does the compact toggle appear */
+.mint-palette-toggle { display:none; }
+
+/* ═══ RESPONSIVE — reposition so the case never covers the art ═══ */
+/* Medium viewports (tablet / narrow desktop) — swing to bottom-right, away
+   from the left-aligned hero text column. */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .mint-palette-bar {
+    left:auto;
+    right:24px;
+  }
+  .mint-palette-bar::before { color:var(--gold); }
+}
+
+/* ═══ MOBILE — lipstick compact → slide-up drawer ═══
+   Tap the gold "compact" button bottom-right → the eyeshadow case slides up
+   from the bottom edge as a full-width drawer. Tap anywhere else or the
+   compact again to dismiss. */
+@media (max-width: 768px) {
+  /* The floating compact button (always visible on mobile) */
+  .mint-palette-toggle {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:fixed;
+    bottom:18px;
+    right:18px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--parchment-deep);
+    border:2px solid var(--gold);
+    box-shadow:
+      0 8px 26px rgba(60,45,15,0.35),
+      inset 0 0 0 2px rgba(240,232,216,0.55),
+      0 0 18px rgba(223,183,71,0.28);
+    cursor:pointer;
+    z-index:312;
+    padding:0;
+    transition:transform 0.3s cubic-bezier(0.22,0.61,0.36,1), box-shadow 0.3s;
+  }
+  .mint-palette-toggle::before {
+    content:'';
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    /* Conic swatch ring — reads as a tiny mixed palette */
+    background:conic-gradient(
+      from 0deg,
+      #eb889b, #dfb747, #78ff4c, #2d6581,
+      #ab3662, #d3854a, #c1caca, #eb889b
+    );
+    box-shadow:
+      0 0 0 1.5px rgba(26,26,24,0.4),
+      0 0 8px rgba(223,183,71,0.55);
+    transition:transform 0.4s cubic-bezier(0.22,0.61,0.36,1);
+  }
+  .mint-palette-toggle.open { transform:rotate(-8deg) scale(1.05); }
+  .mint-palette-toggle.open::before { transform:rotate(220deg); }
+  .mint-palette-toggle:active { transform:scale(0.94); }
+
+  /* Drawer version of the palette bar */
+  .mint-palette-bar {
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    max-width:none;
+    grid-template-columns:none;
+    padding:22px 16px 26px;
+    gap:0;
+    background:
+      linear-gradient(180deg, rgba(240,232,216,0.0) 0%, var(--parchment-deep) 18%),
+      var(--parchment-deep);
+    border:none;
+    border-top:1px solid var(--gold);
+    box-shadow:
+      0 -10px 32px rgba(60,45,15,0.35),
+      inset 0 1px 0 rgba(240,232,216,0.55),
+      0 0 36px rgba(223,183,71,0.08);
+    transform:translateY(110%);
+    will-change:transform;
+  }
+  .mint-palette-bar.show {
+    display:flex;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    align-items:center;
+    justify-content:flex-start;
+    gap:10px;
+    transform:translateY(110%);
+  }
+  .mint-palette-bar.show::-webkit-scrollbar { display:none; }
+  .mint-palette-bar.show.open { transform:translateY(0); }
+
+  /* Drawer label relocates above the strip */
+  .mint-palette-bar::before {
+    top:6px;
+    left:18px;
+    transform:none;
+    font-size:8px;
+    color:var(--gold);
+  }
+
+  /* Bigger tap targets on mobile */
+  .mint-palette-swatch {
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
+    border-width:1.5px;
+  }
+  .mint-palette-swatch.active {
+    box-shadow: 0 0 0 2px var(--gold), 0 0 12px rgba(223,183,71,0.6);
+    transform:scale(1.08);
+  }
+
+  /* Dim backdrop when drawer is open */
+  .mint-palette-backdrop {
+    position:fixed;
+    inset:0;
+    background:rgba(20,18,15,0.35);
+    backdrop-filter:blur(2px);
+    z-index:309;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  .mint-palette-backdrop.open {
+    opacity:1;
+    pointer-events:auto;
+  }
 }
 
 /* When palette is dark, soften fixed UI to match */
