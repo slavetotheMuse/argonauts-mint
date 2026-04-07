@@ -604,7 +604,9 @@ function renderGlitch(ctx, images) {
     ctx.drawImage(img, 0, 0, 480, 480);
   });
 
-  // RGB split artifact — only during fast phases, not when frozen or slow
+  // ─── EFFECT LAYERS (procedural, no PNGs) ───
+
+  // 1. RGB split artifact — fast phases only
   if (!frozen && !isSlow && frameCount % 7 < 2) {
     ctx.globalCompositeOperation = 'screen';
     ctx.globalAlpha = 0.3;
@@ -612,6 +614,47 @@ function renderGlitch(ctx, images) {
     ctx.drawImage(ctx.canvas, shift, 0);
     ctx.globalCompositeOperation = 'source-over';
   }
+
+  // 2. Static noise speckles — subtle grain that breathes with speed
+  if (!frozen) {
+    const grainCount = Math.floor(speed * 80); // more grain when fast
+    ctx.globalAlpha = 0.18;
+    for (let i = 0; i < grainCount; i++) {
+      const x = Math.random() * 480;
+      const y = Math.random() * 480;
+      const size = Math.random() * 3 + 1;
+      ctx.fillStyle = Math.random() > 0.5 ? '#fff' : '#000';
+      ctx.fillRect(x, y, size, size);
+    }
+  }
+
+  // 3. Horizontal tear bands — random rare displacement strips
+  if (!frozen && !isSlow && Math.random() < 0.06) {
+    const tearY = Math.random() * 480;
+    const tearH = 4 + Math.random() * 16;
+    const tearShift = (Math.random() - 0.5) * 30;
+    const slice = ctx.getImageData(0, tearY, 480, tearH);
+    ctx.clearRect(0, tearY, 480, tearH);
+    ctx.putImageData(slice, tearShift, tearY);
+  }
+
+  // 4. Color wash overlay — slow shifting hue tint that pulses with speed
+  if (!frozen) {
+    const hue = (frameCount * 0.5) % 360;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.06 + speed * 0.08;
+    ctx.fillStyle = `hsl(${hue}, 80%, 50%)`;
+    ctx.fillRect(0, 0, 480, 480);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // 5. Vignette dark frame — always on, slightly darker during fast phases
+  const vignette = ctx.createRadialGradient(240, 240, 180, 240, 240, 340);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, `rgba(0,0,0,${0.35 + speed * 0.15})`);
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, 480, 480);
+
   ctx.globalAlpha = 1;
 }
 
